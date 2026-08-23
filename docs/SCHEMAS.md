@@ -11,3 +11,5 @@ The versioned TypeScript contract in `src/types.ts` is the executable schema. Al
 - **WebhookReceipt:** append-only receipt ID, Razorpay event ID, receipt time, verification status, processing status, recursively redacted payload, and optional failure reason. It is persisted before event mapping.
 
 The action enum is exactly `WAIT`, `SEND_GENTLE_REMINDER`, `SEND_ACTION_REQUIRED`, `SURFACE_PAYMENT_UPDATE_LINK`, `ESCALATE_TO_MERCHANT`, and `SUPPRESS`. Optional fields are omitted rather than populated with guessed values.
+
+The advisor input contains only `schemaVersion`, case/subscription state, normalized failure labels, eligible actions, and policy version. Advisor output contains exactly `schemaVersion`, `selectedAction`, `reasonCodes`, `rationale`, `confidence`, and `abstain`. Decisions additionally record selection source, hashes, adapter/config versions, and validation failures.
