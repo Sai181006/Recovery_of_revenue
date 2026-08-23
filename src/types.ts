@@ -1,0 +1,14 @@
+export const ACTIONS = ['WAIT','SEND_GENTLE_REMINDER','SEND_ACTION_REQUIRED','SURFACE_PAYMENT_UPDATE_LINK','ESCALATE_TO_MERCHANT','SUPPRESS'] as const;
+export type Action = (typeof ACTIONS)[number];
+export type SubscriptionState = 'unknown'|'pending'|'active'|'halted'|'cancelled'|'paused';
+export type CaseState = 'OPEN_PENDING'|'OPEN_HALTED'|'RECOVERED'|'CLOSED_CANCELLED'|'SUPPRESSED'|'AMBIGUOUS';
+export type RawFailure = { code?: string; description?: string; field?: string; source?: string; step?: string; reason?: string; metadata?: Record<string, unknown> };
+export type RecoveryEvent = { schemaVersion:'1.0'; eventId:string; merchantId:string; subscriptionId:string; customerRef:string; type:'subscription.pending'|'subscription.charged'|'subscription.halted'|'subscription.cancelled'|'subscription.paused'|'subscription.resumed'|'invalid'; occurredAt:string; receivedAt:string; amountMinor:number; currency:string; consent:boolean; suppressed:boolean; contactAvailable:boolean; retryAt?:string; trustedUpdateLinkAvailable?:boolean; identityConsistent?:boolean; rawFailure?:RawFailure };
+export type Policy = { schemaVersion:'1.0'; merchantId:string; version:string; timezone:string; quietHours:{start:number;end:number}; cooldownHours:number; maxContactsPerCase:number; minimumAmountMinor:number; channels:{simulatedEmail:boolean}; allowUpdateLink:boolean };
+export type NormalizedFailure = { ownership:'customer'|'merchant'|'issuer_or_gateway'|'razorpay'|'unknown'; remedy:'wait_for_platform_retry'|'fund_account'|'update_method'|'retry_checkout'|'fix_integration'|'manual_review'|'no_action'; confidence:'high'|'low'; contradictory:boolean; raw:RawFailure };
+export type RecoveryCase = { id:string; merchantId:string; subscriptionId:string; customerRef:string; state:CaseState; subscriptionState:SubscriptionState; stateOccurredAt:string; amountMinor:number; currency:string; contactCount:number; lastContactAt?:string; latestEventId:string; failure?:NormalizedFailure };
+export type Decision = { id:string; caseId:string; eventId:string; policyVersion:string; decidedAt:string; eligibleActions:Action[]; selectedAction:Action; prohibitedActions:Action[]; reasonCodes:string[]; selectorVersion:'fixed-v1' };
+export type AuditEvent = { id:string; caseId:string; eventId:string; at:string; kind:'EVENT_RECEIVED'|'DUPLICATE_IGNORED'|'PROJECTION_UPDATED'|'STALE_EVENT_IGNORED'|'DECISION_RECORDED'|'OUTBOX_ENQUEUED'|'OUTCOME_RECORDED'; detail:Record<string,unknown> };
+export type Outcome = { id:string; caseId:string; eventId:string; status:'OPEN'|'RECOVERED'|'CANCELLED'|'SUPPRESSED'; occurredAt:string; recoveredAmountMinor?:number; attribution:'none'|'platform_or_spontaneous' };
+export type Expected = { caseState:CaseState; eligibleActions:Action[]; acceptableSelectedActions:Action[]; prohibitedActions:Action[]; outboxCount:number };
+export type Scenario = { id:string; description:string; now:string; events:RecoveryEvent[]; expected:Expected };

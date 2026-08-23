@@ -1,0 +1,13 @@
+# Phase 0/1 decision additions
+
+This additive log inherits D-001–D-014, A-001–A-004, and P-001–P-002 from the source-of-truth `outputs/04_DECISIONS.md`. The source file remains unchanged.
+
+| ID | Type | Status | Decision or assumption | Rationale | Consequence / validation | Date |
+|---|---|---|---|---|---|---|
+| D-015 | Decision | ACCEPTED | Use TypeScript on Node 24 with built-in SQLite, Node's test runner, and a minimal built-in HTTP server. | The repository was empty and this is the smallest durable stack without production infrastructure. | Node 24+ is required; reconsider before Phase 2 hosting. | 2026-08-23 |
+| P-003 | Merchant policy | ACCEPTED | Demo policy uses UTC, quiet hours 21:00–08:00, 24-hour cooldown, two customer contacts per case, INR 1.00 minimum, and simulated email only. | Conservative exact defaults make each guardrail deterministic and testable. | Values are demo merchant policy, not Razorpay rules; merchant owner must approve replacements. | 2026-08-23 |
+| D-016 | Decision | ACCEPTED | `cancelled > active/recovered > halted > paused > pending > unknown` is the local non-regression precedence, with event time also enforced. | Stale or lower-confidence lifecycle events must not reopen a confirmed terminal/recovered state. | Phase 2 reconciliation must replace ambiguity with Razorpay API evidence where available. | 2026-08-23 |
+| D-017 | Decision | ACCEPTED | Contradictory normalization, invalid event type, inconsistent identity, and unknown state select `SUPPRESS`; unknown failure classification allows only `WAIT` or merchant escalation. | These paths expose uncertainty while preventing customer contact. | Audit reason codes identify every fail-safe path. | 2026-08-23 |
+| D-018 | Decision | ACCEPTED | Fixed selector precedence is suppression, merchant escalation, trusted update-link surface, action-required message, gentle reminder, then wait. | It is deterministic and favors explicit safety/manual handling before contact convenience. | Phase 3 may rank only the already eligible set; execution remains deterministic. | 2026-08-23 |
+| A-005 | Assumption | VALIDATE | A boolean `trustedUpdateLinkAvailable` fixture marker is sufficient to test eligibility without storing or fabricating a URL. | Real link mechanics are explicitly Phase 2+ evidence. | Replace the marker only with a verified trusted application/Razorpay flow. | 2026-08-23 |
+| D-019 | Decision | ACCEPTED | Scenario-provided UTC `now` is the sole evaluation clock in tests. | Cooldowns and quiet hours must be reproducible. | Production ingress will inject a trusted server clock. | 2026-08-23 |
