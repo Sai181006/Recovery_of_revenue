@@ -1,6 +1,6 @@
 # Revenue Recovery — deterministic local vertical slice
 
-Phase 0–5 implementation for failed recurring Razorpay subscriptions. It includes deterministic recovery mechanics, signed test-mode webhook ingress, a provider-neutral constrained-advisor gate, a simulated customer/merchant experience, and offline batch evaluation. There is no live model provider, messaging provider, credential handling, real payment link, or external side effect.
+Phase 0–6 credential-independent implementation for failed recurring Razorpay subscriptions. It includes deterministic recovery mechanics, signed test-mode webhook ingress, a provider-neutral constrained-advisor gate, a simulated customer/merchant experience, offline batch evaluation, and submission hardening. There is no live model provider, messaging provider, credential handling, real payment link, or external side effect.
 
 ## Requirements and setup
 
@@ -8,6 +8,8 @@ Phase 0–5 implementation for failed recurring Razorpay subscriptions. It inclu
 - `npm install`
 
 Run every check with `npm run verify`. Run the complete fixture batch with `npm run scenarios`. Start the inspection API with `npm start`, then open `http://localhost:3000/cases` or `/cases/{merchantId:subscriptionId}`. The API seeds its local `data/recovery.sqlite` from fixtures and is only a case viewer.
+
+Use `npm run demo:reset` to remove only the local `data/recovery.sqlite*` files and `npm run demo:seed` to rebuild the deterministic demo. Run `npm run release:check` for the complete test/evaluation chain plus required-artifact, secret, generated-data, and claim audits. See `docs/DEMO_RUNBOOK.md`, `docs/SUBMISSION_CHECKLIST.md`, and `docs/LIMITATIONS.md`.
 
 ## Razorpay test-mode webhook
 

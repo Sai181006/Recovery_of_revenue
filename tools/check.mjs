@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const roots = ['src', 'fixtures', 'test'];
+const roots = ['src', 'fixtures', 'test', 'tools'];
 const files = roots.flatMap(walk).sort();
 const mode = process.argv[2];
 
