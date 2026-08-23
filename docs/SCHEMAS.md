@@ -8,5 +8,6 @@ The versioned TypeScript contract in `src/types.ts` is the executable schema. Al
 - **Decision:** exact eligible and prohibited allowlist partitions, selected action, deterministic reason codes, policy version, and selector version.
 - **AuditEvent:** append-only event/case/time/kind/detail record for receipt, deduplication, projection, decisions, outbox, and outcomes.
 - **Outcome:** event-linked open/recovered/cancelled/suppressed status, optional recovered value, and conservative attribution.
+- **WebhookReceipt:** append-only receipt ID, Razorpay event ID, receipt time, verification status, processing status, recursively redacted payload, and optional failure reason. It is persisted before event mapping.
 
 The action enum is exactly `WAIT`, `SEND_GENTLE_REMINDER`, `SEND_ACTION_REQUIRED`, `SURFACE_PAYMENT_UPDATE_LINK`, `ESCALATE_TO_MERCHANT`, and `SUPPRESS`. Optional fields are omitted rather than populated with guessed values.

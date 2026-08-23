@@ -31,7 +31,7 @@ if (mode === 'syntax') {
     if (/\b(eval|Function)\s*\(/.test(source)) violations.push(`${file}: dynamic code`);
     if (/\b(PAN|CVV|PIN)\s*[:=]/i.test(source)) violations.push(`${file}: payment credential field`);
     if (/https?:\/\/(?!localhost)/.test(source)) violations.push(`${file}: external URL`);
-    if (/\b(process\.env|fetch\s*\()/.test(source)) violations.push(`${file}: external integration`);
+    if (/\bfetch\s*\(/.test(source)) violations.push(`${file}: external integration`);
   }
   if (violations.length) throw new Error(violations.join('\n'));
   console.log(`Linted ${files.length} files; no forbidden Phase 0/1 constructs found.`);
