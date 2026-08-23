@@ -13,3 +13,5 @@ The versioned TypeScript contract in `src/types.ts` is the executable schema. Al
 The action enum is exactly `WAIT`, `SEND_GENTLE_REMINDER`, `SEND_ACTION_REQUIRED`, `SURFACE_PAYMENT_UPDATE_LINK`, `ESCALATE_TO_MERCHANT`, and `SUPPRESS`. Optional fields are omitted rather than populated with guessed values.
 
 The advisor input contains only `schemaVersion`, case/subscription state, normalized failure labels, eligible actions, and policy version. Advisor output contains exactly `schemaVersion`, `selectedAction`, `reasonCodes`, `rationale`, `confidence`, and `abstain`. Decisions additionally record selection source, hashes, adapter/config versions, and validation failures.
+
+Phase 4 adds a versioned message preview (`templateVersion`, simulated channel, subject, body, recovery destination) and audited merchant-control records. Recovery destinations are either an explicit simulation marker or a validated HTTPS URL on an approved domain. Outbox delivery status is simulated and idempotent.

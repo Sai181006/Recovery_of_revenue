@@ -9,6 +9,8 @@ export class Store {
   saveDecision(d:Decision){this.db.prepare('INSERT OR IGNORE INTO decisions VALUES(?,?,?,?)').run(d.id,d.eventId,d.caseId,JSON.stringify(d))}
   audit(a:AuditEvent){this.db.prepare('INSERT OR IGNORE INTO audit(id,case_id,event_id,data) VALUES(?,?,?,?)').run(a.id,a.caseId,a.eventId,JSON.stringify(a))}
   enqueue(id:string,key:string,caseId:string,action:string,payload:unknown){this.db.prepare('INSERT OR IGNORE INTO outbox VALUES(?,?,?,?,?,?)').run(id,key,caseId,action,'SIMULATED',JSON.stringify(payload))}
+  outboxItem(id:string){return this.db.prepare('SELECT id,case_id,action,status,payload FROM outbox WHERE id=?').get(id) as {id:string;case_id:string;action:string;status:string;payload:string}|undefined}
+  markOutboxDelivered(id:string){this.db.prepare("UPDATE outbox SET status='SIMULATED_DELIVERED' WHERE id=? AND status='SIMULATED'").run(id)}
   outcome(o:Outcome){this.db.prepare('INSERT OR IGNORE INTO outcomes VALUES(?,?,?,?)').run(o.id,o.eventId,o.caseId,JSON.stringify(o))}
   recordWebhookReceipt(r:{receiptId:string;eventId:string;receivedAt:string;verification:string;processingStatus:string;redactedPayload:unknown}){this.db.prepare('INSERT INTO webhook_receipts(receipt_id,event_id,received_at,verification,processing_status,redacted_payload) VALUES(?,?,?,?,?,?)').run(r.receiptId,r.eventId,r.receivedAt,r.verification,r.processingStatus,JSON.stringify(r.redactedPayload))}
   updateWebhookReceipt(id:string,status:string,error?:string){this.db.prepare('UPDATE webhook_receipts SET processing_status=?,error=? WHERE receipt_id=?').run(status,error??null,id)}

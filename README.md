@@ -1,6 +1,6 @@
 # Revenue Recovery — deterministic local vertical slice
 
-Phase 0–3 implementation for failed recurring Razorpay subscriptions. It includes deterministic recovery mechanics, signed test-mode webhook ingress, and a provider-neutral constrained-advisor gate. There is no live model provider, messaging provider, credential handling, real payment link, or external side effect.
+Phase 0–4 implementation for failed recurring Razorpay subscriptions. It includes deterministic recovery mechanics, signed test-mode webhook ingress, a provider-neutral constrained-advisor gate, and a simulated customer/merchant experience. There is no live model provider, messaging provider, credential handling, real payment link, or external side effect.
 
 ## Requirements and setup
 
@@ -20,6 +20,12 @@ The default server context has no customer consent or approved contact route, so
 `src/advisor.ts` defines the Phase 3 model contract. An injected adapter receives only lifecycle state, normalized failure labels, policy version, and the deterministic eligible-action set. Strict validation rejects missing/extra fields, actions outside that set, oversized rationale, malformed confidence, and unsafe additions. Unavailable or invalid adapters fall back to fixed rules; abstention or confidence below `0.6` selects `WAIT` when eligible. Input/output hashes and adapter/config versions are stored with the decision.
 
 No live model adapter is configured. The automated suite uses deterministic, malformed, unavailable, low-confidence, and adversarial test adapters to prove the execution boundary without credentials or network access.
+
+## Merchant and customer experience
+
+`GET /cases` returns the merchant queue and `GET /cases/{id}` returns decisions, audit, simulated outbox, and outcomes. Merchant controls require `X-Merchant-Role`: operators/admins may call `POST /cases/{id}/suppress`; only admins may call `POST /cases/{id}/override` with an eligible `action`; operators/admins may call `POST /outbox/{id}/deliver` to simulate delivery.
+
+Customer previews use fixed template version `recovery-en-v1`. Recovery destinations remain simulated. Future real URLs must be HTTPS and match an explicitly approved domain; tests cover deceptive subdomains and insecure URLs. Suppression is durable across later failure events, while a confirmed recovery still closes the case.
 
 Individual checks are `npm run format:check`, `npm run lint`, `npm run typecheck`, and `npm test`. Because this zero-dependency sandbox cannot fetch npm packages, `typecheck` performs Node's TypeScript parse/type-stripping validation; install a full static TypeScript checker before Phase 2.
 

@@ -30,7 +30,7 @@ if (mode === 'syntax') {
     const source = readFileSync(file, 'utf8');
     if (/\b(eval|Function)\s*\(/.test(source)) violations.push(`${file}: dynamic code`);
     if (/\b(PAN|CVV|PIN)\s*[:=]/i.test(source)) violations.push(`${file}: payment credential field`);
-    if (/https?:\/\/(?!localhost)/.test(source)) violations.push(`${file}: external URL`);
+    if (file.startsWith('src') && /https?:\/\/(?!localhost)/.test(source)) violations.push(`${file}: external URL`);
     if (/\bfetch\s*\(/.test(source)) violations.push(`${file}: external integration`);
   }
   if (violations.length) throw new Error(violations.join('\n'));

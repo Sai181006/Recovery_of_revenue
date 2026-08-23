@@ -3,6 +3,7 @@ const CONTACT:Action[]=['SEND_GENTLE_REMINDER','SEND_ACTION_REQUIRED','SURFACE_P
 function quiet(now:string,p:Policy){const hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:p.timezone,hour:'2-digit',hourCycle:'h23'}).format(new Date(now))); return p.quietHours.start>p.quietHours.end ? hour>=p.quietHours.start||hour<p.quietHours.end : hour>=p.quietHours.start&&hour<p.quietHours.end;}
 export function evaluate(c:RecoveryCase,e:RecoveryEvent,p:Policy,now:string):{eligible:Action[];reasons:string[]}{
   if(e.type==='invalid'||e.identityConsistent===false||c.state==='AMBIGUOUS') return {eligible:['SUPPRESS'],reasons:['FAIL_CLOSED_AMBIGUOUS_OR_INVALID']};
+  if(c.state==='SUPPRESSED') return {eligible:['SUPPRESS'],reasons:['CASE_SUPPRESSED']};
   if(e.suppressed||!e.consent) return {eligible:['SUPPRESS'],reasons:['SUPPRESSION_OR_NO_CONSENT']};
   if(c.state==='RECOVERED'||c.state==='CLOSED_CANCELLED') return {eligible:['SUPPRESS'],reasons:['CASE_TERMINAL']};
   if(c.failure?.ownership==='unknown'||c.failure?.contradictory) return {eligible:['WAIT','ESCALATE_TO_MERCHANT'],reasons:['UNKNOWN_OR_CONTRADICTORY_FAILURE']};
