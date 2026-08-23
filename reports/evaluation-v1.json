@@ -1,0 +1,1170 @@
+{
+  "reportVersion": "evaluation-v1",
+  "generatedAt": "2026-08-23T23:59:59.000Z",
+  "dataset": "synthetic_phase_0_fixtures",
+  "fixtureSetHash": "51cd6110180ebc0303366335acaca081b4a311e6ea4b0edb3b91269d4e769ec7",
+  "outcomeRule": "Synthetic recovery is true only for the three customer-remediable golden fixtures when the selected customer-contact action is an acceptable label. This is not observed revenue or causal lift.",
+  "releaseGate": {
+    "passed": true,
+    "criticalFailures": []
+  },
+  "metrics": {
+    "no_added_customer_contact": {
+      "cases": 14,
+      "contacts": 0,
+      "syntheticRecovered": 0,
+      "contactsPerSyntheticRecovery": null,
+      "criticalViolations": 0,
+      "duplicateOutwardActions": 0,
+      "actionMix": {
+        "WAIT": 8,
+        "SEND_GENTLE_REMINDER": 0,
+        "SEND_ACTION_REQUIRED": 0,
+        "SURFACE_PAYMENT_UPDATE_LINK": 0,
+        "ESCALATE_TO_MERCHANT": 2,
+        "SUPPRESS": 4
+      },
+      "segments": {
+        "AMBIGUOUS|none|none": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "AMBIGUOUS|unknown|manual_review": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "OPEN_HALTED|customer|fund_account": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "OPEN_PENDING|customer|fund_account": {
+          "cases": 5,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "OPEN_PENDING|customer|update_method": {
+          "cases": 2,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "OPEN_PENDING|issuer_or_gateway|wait_for_platform_retry": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "OPEN_PENDING|merchant|fix_integration": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "OPEN_PENDING|unknown|manual_review": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "RECOVERED|none|none": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        }
+      }
+    },
+    "fixed_rule": {
+      "cases": 14,
+      "contacts": 4,
+      "syntheticRecovered": 3,
+      "contactsPerSyntheticRecovery": 1.3333333333333333,
+      "criticalViolations": 0,
+      "duplicateOutwardActions": 0,
+      "actionMix": {
+        "WAIT": 3,
+        "SEND_GENTLE_REMINDER": 2,
+        "SEND_ACTION_REQUIRED": 1,
+        "SURFACE_PAYMENT_UPDATE_LINK": 1,
+        "ESCALATE_TO_MERCHANT": 3,
+        "SUPPRESS": 4
+      },
+      "segments": {
+        "AMBIGUOUS|none|none": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "AMBIGUOUS|unknown|manual_review": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "OPEN_HALTED|customer|fund_account": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "OPEN_PENDING|customer|fund_account": {
+          "cases": 5,
+          "contacts": 2,
+          "syntheticRecovered": 1
+        },
+        "OPEN_PENDING|customer|update_method": {
+          "cases": 2,
+          "contacts": 2,
+          "syntheticRecovered": 2
+        },
+        "OPEN_PENDING|issuer_or_gateway|wait_for_platform_retry": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "OPEN_PENDING|merchant|fix_integration": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "OPEN_PENDING|unknown|manual_review": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "RECOVERED|none|none": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        }
+      }
+    },
+    "bounded_advisor_simulation": {
+      "cases": 14,
+      "contacts": 4,
+      "syntheticRecovered": 3,
+      "contactsPerSyntheticRecovery": 1.3333333333333333,
+      "criticalViolations": 0,
+      "duplicateOutwardActions": 0,
+      "actionMix": {
+        "WAIT": 3,
+        "SEND_GENTLE_REMINDER": 2,
+        "SEND_ACTION_REQUIRED": 1,
+        "SURFACE_PAYMENT_UPDATE_LINK": 1,
+        "ESCALATE_TO_MERCHANT": 3,
+        "SUPPRESS": 4
+      },
+      "segments": {
+        "AMBIGUOUS|none|none": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "AMBIGUOUS|unknown|manual_review": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "OPEN_HALTED|customer|fund_account": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "OPEN_PENDING|customer|fund_account": {
+          "cases": 5,
+          "contacts": 2,
+          "syntheticRecovered": 1
+        },
+        "OPEN_PENDING|customer|update_method": {
+          "cases": 2,
+          "contacts": 2,
+          "syntheticRecovered": 2
+        },
+        "OPEN_PENDING|issuer_or_gateway|wait_for_platform_retry": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "OPEN_PENDING|merchant|fix_integration": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "OPEN_PENDING|unknown|manual_review": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        },
+        "RECOVERED|none|none": {
+          "cases": 1,
+          "contacts": 0,
+          "syntheticRecovered": 0
+        }
+      }
+    }
+  },
+  "traces": [
+    {
+      "scenarioId": "insufficient-funds",
+      "strategy": "no_added_customer_contact",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER"
+      ],
+      "selectedAction": "WAIT",
+      "prohibitedActions": [
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "expired-card-link",
+      "strategy": "no_added_customer_contact",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "update_method",
+      "eligibleActions": [
+        "WAIT",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK"
+      ],
+      "selectedAction": "WAIT",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "cancelled-mandate",
+      "strategy": "no_added_customer_contact",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "update_method",
+      "eligibleActions": [
+        "WAIT",
+        "SEND_ACTION_REQUIRED"
+      ],
+      "selectedAction": "WAIT",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "gateway-retry",
+      "strategy": "no_added_customer_contact",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "issuer_or_gateway",
+      "failureRemedy": "wait_for_platform_retry",
+      "eligibleActions": [
+        "WAIT"
+      ],
+      "selectedAction": "WAIT",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "merchant-integration",
+      "strategy": "no_added_customer_contact",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "merchant",
+      "failureRemedy": "fix_integration",
+      "eligibleActions": [
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "selectedAction": "ESCALATE_TO_MERCHANT",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 5,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "halted",
+      "strategy": "no_added_customer_contact",
+      "caseState": "OPEN_HALTED",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "selectedAction": "ESCALATE_TO_MERCHANT",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 5,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "opt-out",
+      "strategy": "no_added_customer_contact",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "SUPPRESS"
+      ],
+      "selectedAction": "SUPPRESS",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "quiet-hours",
+      "strategy": "no_added_customer_contact",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "WAIT"
+      ],
+      "selectedAction": "WAIT",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "unknown-failure",
+      "strategy": "no_added_customer_contact",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "unknown",
+      "failureRemedy": "manual_review",
+      "eligibleActions": [
+        "WAIT",
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "selectedAction": "WAIT",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "SUPPRESS"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "contradictory-evidence",
+      "strategy": "no_added_customer_contact",
+      "caseState": "AMBIGUOUS",
+      "failureOwnership": "unknown",
+      "failureRemedy": "manual_review",
+      "eligibleActions": [
+        "SUPPRESS"
+      ],
+      "selectedAction": "SUPPRESS",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "invalid-event",
+      "strategy": "no_added_customer_contact",
+      "caseState": "AMBIGUOUS",
+      "failureOwnership": "none",
+      "failureRemedy": "none",
+      "eligibleActions": [
+        "SUPPRESS"
+      ],
+      "selectedAction": "SUPPRESS",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "duplicate-delivery",
+      "strategy": "no_added_customer_contact",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER"
+      ],
+      "selectedAction": "WAIT",
+      "prohibitedActions": [
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 0,
+      "auditCount": 5,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "out-of-order-recovery",
+      "strategy": "no_added_customer_contact",
+      "caseState": "RECOVERED",
+      "failureOwnership": "none",
+      "failureRemedy": "none",
+      "eligibleActions": [
+        "SUPPRESS"
+      ],
+      "selectedAction": "SUPPRESS",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "outboxCount": 0,
+      "auditCount": 8,
+      "outcomeCount": 2,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "missing-contact",
+      "strategy": "no_added_customer_contact",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "WAIT"
+      ],
+      "selectedAction": "WAIT",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "insufficient-funds",
+      "strategy": "fixed_rule",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER"
+      ],
+      "selectedAction": "SEND_GENTLE_REMINDER",
+      "prohibitedActions": [
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 5,
+      "outcomeCount": 1,
+      "syntheticRecovered": true,
+      "violations": []
+    },
+    {
+      "scenarioId": "expired-card-link",
+      "strategy": "fixed_rule",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "update_method",
+      "eligibleActions": [
+        "WAIT",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK"
+      ],
+      "selectedAction": "SURFACE_PAYMENT_UPDATE_LINK",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 5,
+      "outcomeCount": 1,
+      "syntheticRecovered": true,
+      "violations": []
+    },
+    {
+      "scenarioId": "cancelled-mandate",
+      "strategy": "fixed_rule",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "update_method",
+      "eligibleActions": [
+        "WAIT",
+        "SEND_ACTION_REQUIRED"
+      ],
+      "selectedAction": "SEND_ACTION_REQUIRED",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 5,
+      "outcomeCount": 1,
+      "syntheticRecovered": true,
+      "violations": []
+    },
+    {
+      "scenarioId": "gateway-retry",
+      "strategy": "fixed_rule",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "issuer_or_gateway",
+      "failureRemedy": "wait_for_platform_retry",
+      "eligibleActions": [
+        "WAIT"
+      ],
+      "selectedAction": "WAIT",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "merchant-integration",
+      "strategy": "fixed_rule",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "merchant",
+      "failureRemedy": "fix_integration",
+      "eligibleActions": [
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "selectedAction": "ESCALATE_TO_MERCHANT",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 5,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "halted",
+      "strategy": "fixed_rule",
+      "caseState": "OPEN_HALTED",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "selectedAction": "ESCALATE_TO_MERCHANT",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 5,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "opt-out",
+      "strategy": "fixed_rule",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "SUPPRESS"
+      ],
+      "selectedAction": "SUPPRESS",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "quiet-hours",
+      "strategy": "fixed_rule",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "WAIT"
+      ],
+      "selectedAction": "WAIT",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "unknown-failure",
+      "strategy": "fixed_rule",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "unknown",
+      "failureRemedy": "manual_review",
+      "eligibleActions": [
+        "WAIT",
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "selectedAction": "ESCALATE_TO_MERCHANT",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 5,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "contradictory-evidence",
+      "strategy": "fixed_rule",
+      "caseState": "AMBIGUOUS",
+      "failureOwnership": "unknown",
+      "failureRemedy": "manual_review",
+      "eligibleActions": [
+        "SUPPRESS"
+      ],
+      "selectedAction": "SUPPRESS",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "invalid-event",
+      "strategy": "fixed_rule",
+      "caseState": "AMBIGUOUS",
+      "failureOwnership": "none",
+      "failureRemedy": "none",
+      "eligibleActions": [
+        "SUPPRESS"
+      ],
+      "selectedAction": "SUPPRESS",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "duplicate-delivery",
+      "strategy": "fixed_rule",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER"
+      ],
+      "selectedAction": "SEND_GENTLE_REMINDER",
+      "prohibitedActions": [
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 6,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "out-of-order-recovery",
+      "strategy": "fixed_rule",
+      "caseState": "RECOVERED",
+      "failureOwnership": "none",
+      "failureRemedy": "none",
+      "eligibleActions": [
+        "SUPPRESS"
+      ],
+      "selectedAction": "SUPPRESS",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "outboxCount": 0,
+      "auditCount": 8,
+      "outcomeCount": 2,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "missing-contact",
+      "strategy": "fixed_rule",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "WAIT"
+      ],
+      "selectedAction": "WAIT",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "insufficient-funds",
+      "strategy": "bounded_advisor_simulation",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER"
+      ],
+      "selectedAction": "SEND_GENTLE_REMINDER",
+      "prohibitedActions": [
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 5,
+      "outcomeCount": 1,
+      "syntheticRecovered": true,
+      "violations": []
+    },
+    {
+      "scenarioId": "expired-card-link",
+      "strategy": "bounded_advisor_simulation",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "update_method",
+      "eligibleActions": [
+        "WAIT",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK"
+      ],
+      "selectedAction": "SURFACE_PAYMENT_UPDATE_LINK",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 5,
+      "outcomeCount": 1,
+      "syntheticRecovered": true,
+      "violations": []
+    },
+    {
+      "scenarioId": "cancelled-mandate",
+      "strategy": "bounded_advisor_simulation",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "update_method",
+      "eligibleActions": [
+        "WAIT",
+        "SEND_ACTION_REQUIRED"
+      ],
+      "selectedAction": "SEND_ACTION_REQUIRED",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 5,
+      "outcomeCount": 1,
+      "syntheticRecovered": true,
+      "violations": []
+    },
+    {
+      "scenarioId": "gateway-retry",
+      "strategy": "bounded_advisor_simulation",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "issuer_or_gateway",
+      "failureRemedy": "wait_for_platform_retry",
+      "eligibleActions": [
+        "WAIT"
+      ],
+      "selectedAction": "WAIT",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "merchant-integration",
+      "strategy": "bounded_advisor_simulation",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "merchant",
+      "failureRemedy": "fix_integration",
+      "eligibleActions": [
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "selectedAction": "ESCALATE_TO_MERCHANT",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 5,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "halted",
+      "strategy": "bounded_advisor_simulation",
+      "caseState": "OPEN_HALTED",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "selectedAction": "ESCALATE_TO_MERCHANT",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 5,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "opt-out",
+      "strategy": "bounded_advisor_simulation",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "SUPPRESS"
+      ],
+      "selectedAction": "SUPPRESS",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "quiet-hours",
+      "strategy": "bounded_advisor_simulation",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "WAIT"
+      ],
+      "selectedAction": "WAIT",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "unknown-failure",
+      "strategy": "bounded_advisor_simulation",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "unknown",
+      "failureRemedy": "manual_review",
+      "eligibleActions": [
+        "WAIT",
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "selectedAction": "ESCALATE_TO_MERCHANT",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 5,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "contradictory-evidence",
+      "strategy": "bounded_advisor_simulation",
+      "caseState": "AMBIGUOUS",
+      "failureOwnership": "unknown",
+      "failureRemedy": "manual_review",
+      "eligibleActions": [
+        "SUPPRESS"
+      ],
+      "selectedAction": "SUPPRESS",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "invalid-event",
+      "strategy": "bounded_advisor_simulation",
+      "caseState": "AMBIGUOUS",
+      "failureOwnership": "none",
+      "failureRemedy": "none",
+      "eligibleActions": [
+        "SUPPRESS"
+      ],
+      "selectedAction": "SUPPRESS",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "duplicate-delivery",
+      "strategy": "bounded_advisor_simulation",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER"
+      ],
+      "selectedAction": "SEND_GENTLE_REMINDER",
+      "prohibitedActions": [
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 1,
+      "auditCount": 6,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "out-of-order-recovery",
+      "strategy": "bounded_advisor_simulation",
+      "caseState": "RECOVERED",
+      "failureOwnership": "none",
+      "failureRemedy": "none",
+      "eligibleActions": [
+        "SUPPRESS"
+      ],
+      "selectedAction": "SUPPRESS",
+      "prohibitedActions": [
+        "WAIT",
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT"
+      ],
+      "outboxCount": 0,
+      "auditCount": 8,
+      "outcomeCount": 2,
+      "syntheticRecovered": false,
+      "violations": []
+    },
+    {
+      "scenarioId": "missing-contact",
+      "strategy": "bounded_advisor_simulation",
+      "caseState": "OPEN_PENDING",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
+      "eligibleActions": [
+        "WAIT"
+      ],
+      "selectedAction": "WAIT",
+      "prohibitedActions": [
+        "SEND_GENTLE_REMINDER",
+        "SEND_ACTION_REQUIRED",
+        "SURFACE_PAYMENT_UPDATE_LINK",
+        "ESCALATE_TO_MERCHANT",
+        "SUPPRESS"
+      ],
+      "outboxCount": 0,
+      "auditCount": 4,
+      "outcomeCount": 1,
+      "syntheticRecovered": false,
+      "violations": []
+    }
+  ]
+}

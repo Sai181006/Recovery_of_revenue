@@ -15,3 +15,5 @@ The action enum is exactly `WAIT`, `SEND_GENTLE_REMINDER`, `SEND_ACTION_REQUIRED
 The advisor input contains only `schemaVersion`, case/subscription state, normalized failure labels, eligible actions, and policy version. Advisor output contains exactly `schemaVersion`, `selectedAction`, `reasonCodes`, `rationale`, `confidence`, and `abstain`. Decisions additionally record selection source, hashes, adapter/config versions, and validation failures.
 
 Phase 4 adds a versioned message preview (`templateVersion`, simulated channel, subject, body, recovery destination) and audited merchant-control records. Recovery destinations are either an explicit simulation marker or a validated HTTPS URL on an approved domain. Outbox delivery status is simulated and idempotent.
+
+The Phase 5 report contains a report version, deterministic generation time, dataset label/hash, explicit outcome rule, release-gate result/failures, per-strategy metrics, segmented metrics, and complete scenario traces. Every trace links eligibility, selection, prohibited actions, outbox/audit/outcome counts, synthetic label, and violations.

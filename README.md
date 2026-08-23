@@ -1,6 +1,6 @@
 # Revenue Recovery — deterministic local vertical slice
 
-Phase 0–4 implementation for failed recurring Razorpay subscriptions. It includes deterministic recovery mechanics, signed test-mode webhook ingress, a provider-neutral constrained-advisor gate, and a simulated customer/merchant experience. There is no live model provider, messaging provider, credential handling, real payment link, or external side effect.
+Phase 0–5 implementation for failed recurring Razorpay subscriptions. It includes deterministic recovery mechanics, signed test-mode webhook ingress, a provider-neutral constrained-advisor gate, a simulated customer/merchant experience, and offline batch evaluation. There is no live model provider, messaging provider, credential handling, real payment link, or external side effect.
 
 ## Requirements and setup
 
@@ -26,6 +26,12 @@ No live model adapter is configured. The automated suite uses deterministic, mal
 `GET /cases` returns the merchant queue and `GET /cases/{id}` returns decisions, audit, simulated outbox, and outcomes. Merchant controls require `X-Merchant-Role`: operators/admins may call `POST /cases/{id}/suppress`; only admins may call `POST /cases/{id}/override` with an eligible `action`; operators/admins may call `POST /outbox/{id}/deliver` to simulate delivery.
 
 Customer previews use fixed template version `recovery-en-v1`. Recovery destinations remain simulated. Future real URLs must be HTTPS and match an explicitly approved domain; tests cover deceptive subdomains and insecure URLs. Suppression is durable across later failure events, while a confirmed recovery still closes the case.
+
+## Batch evaluation
+
+Run `npm run evaluate` to produce `reports/evaluation-v1.json`. The same report is inspectable at `GET /evaluation`. It compares no-added-customer-contact, fixed-rule, and bounded-advisor-simulation strategies across the same 14 fixtures and emits per-case traces, action mix, contact counts, synthetic recovery proxies, segments, and a hard release gate.
+
+The recovery proxy is a declared deterministic label for three customer-remediable fixtures. It is not observed revenue, incremental lift, or causal evidence. Any prohibited/out-of-eligibility action, excess outbox item, guardrail contact, incomplete audit, or missing outcome fails the command.
 
 Individual checks are `npm run format:check`, `npm run lint`, `npm run typecheck`, and `npm test`. Because this zero-dependency sandbox cannot fetch npm packages, `typecheck` performs Node's TypeScript parse/type-stripping validation; install a full static TypeScript checker before Phase 2.
 
