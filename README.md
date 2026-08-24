@@ -1,15 +1,17 @@
 # Revenue Recovery — deterministic local vertical slice
 
-Phase 0–6 credential-independent implementation for failed recurring Razorpay subscriptions. It includes deterministic recovery mechanics, signed test-mode webhook ingress, a provider-neutral constrained-advisor gate, a simulated customer/merchant experience, offline batch evaluation, and submission hardening. There is no live model provider, messaging provider, credential handling, real payment link, or external side effect.
+Phase 0–6 credential-independent implementation for failed recurring Razorpay subscriptions. It includes deterministic recovery mechanics, signed test-mode webhook ingress, a provider-neutral constrained-advisor gate, a responsive merchant workspace, offline batch evaluation, and submission hardening. There is no live model provider, messaging provider, credential handling, real payment link, or external side effect.
 
 ## Requirements and setup
 
 - Node.js 24 or newer (the project uses built-in SQLite and erasable TypeScript execution)
 - `npm install`
 
-Run every check with `npm run verify`. Run the complete fixture batch with `npm run scenarios`. Start the inspection API with `npm start`, then open `http://localhost:3000/cases` or `/cases/{merchantId:subscriptionId}`. The API seeds its local `data/recovery.sqlite` from fixtures and is only a case viewer.
+For the fastest local start, run `npm run dev`, then open `http://localhost:3000`. This seeds the deterministic dataset and launches the merchant dashboard. Run `npm run demo` to execute the complete release gate before starting the same demo. The dashboard provides overview metrics, a searchable case queue, case evidence and decisions, bounded merchant controls, message previews, outcomes, the complete audit trail, and matched batch evaluation.
 
-Use `npm run demo:reset` to remove only the local `data/recovery.sqlite*` files and `npm run demo:seed` to rebuild the deterministic demo. Run `npm run release:check` for the complete test/evaluation chain plus required-artifact, secret, generated-data, and claim audits. See `docs/DEMO_RUNBOOK.md`, `docs/SUBMISSION_CHECKLIST.md`, and `docs/LIMITATIONS.md`.
+Copy `.env.example` to `.env` only when you need to change `PORT`, `HOST`, or `DATA_PATH`. `.env` is ignored by Git. Optional provider values can remain empty; npm commands remain in `package.json` so setup is executable and reviewable rather than hidden in environment configuration.
+
+Use `npm run demo:reset` to remove only the local `data/recovery.sqlite*` files and `npm run demo:seed` to rebuild the deterministic demo. Run `npm run release:check` for the complete test/evaluation chain plus required-artifact, secret, generated-data, and claim audits. JSON API routes remain available at `/cases`, `/evaluation`, `/health`, and `/webhook-receipts`. See `docs/DEMO_RUNBOOK.md`, `docs/SUBMISSION_CHECKLIST.md`, and `docs/LIMITATIONS.md`.
 
 ## Razorpay test-mode webhook
 

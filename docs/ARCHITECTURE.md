@@ -7,7 +7,7 @@ raw signed webhook -> verified/redacted receipt -> event inbox -> monotonic proj
                                                               -> bounded advisor or fixed fallback
                                                               -> deterministic execution gate
                                                               -> simulated outbox + audit + outcome
-                                                              -> merchant API + evaluation report
+                                                              -> merchant workspace + JSON API + evaluation report
 ```
 
 Razorpay remains the payment system of record. Deterministic code owns signature verification, persistence, deduplication, ordering, state transitions, normalization, policy, eligibility, cooldowns, caps, quiet hours, suppression, dispatch, and audit. The optional advisor can rank only an existing eligible set and has no credentials, raw customer identity, payment data, arbitrary tools, or dispatch access.

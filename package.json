@@ -1,11 +1,13 @@
 {
   "name": "revenue-recovery",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "engines": { "node": ">=24" },
   "scripts": {
-    "start": "node --experimental-strip-types src/api.ts",
+    "start": "node --env-file-if-exists=.env --experimental-strip-types src/api.ts",
+    "dev": "npm run demo:seed && npm start",
+    "demo": "npm run release:check && npm run demo:seed && npm start",
     "scenarios": "node --experimental-strip-types src/cli.ts scenarios",
     "evaluate": "node --experimental-strip-types src/cli.ts evaluate",
     "demo:reset": "node --experimental-strip-types tools/demo.ts reset",
