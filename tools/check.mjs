@@ -29,9 +29,12 @@ if (mode === 'syntax') {
   for (const file of files) {
     const source = readFileSync(file, 'utf8');
     if (/\b(eval|Function)\s*\(/.test(source)) violations.push(`${file}: dynamic code`);
-    if (/\b(PAN|CVV|PIN)\s*[:=]/i.test(source)) violations.push(`${file}: payment credential field`);
-    if (file.startsWith('src') && /https?:\/\/(?!localhost)/.test(source)) violations.push(`${file}: external URL`);
-    if (file.startsWith('src') && /\bfetch\s*\(/.test(source)) violations.push(`${file}: external integration`);
+    if (/\b(PAN|CVV|PIN)\s*[:=]/i.test(source))
+      violations.push(`${file}: payment credential field`);
+    if (file.startsWith('src') && /https?:\/\/(?!localhost)/.test(source))
+      violations.push(`${file}: external URL`);
+    if (file.startsWith('src') && /\bfetch\s*\(/.test(source))
+      violations.push(`${file}: external integration`);
   }
   if (violations.length) throw new Error(violations.join('\n'));
   console.log(`Linted ${files.length} script files; no unsafe constructs found.`);
@@ -48,7 +51,9 @@ if (mode === 'syntax') {
   if (mode === 'format-check' && changed.length) {
     throw new Error(`Formatting required: ${changed.join(', ')}`);
   }
-  console.log(`${mode === 'format' ? 'Formatted' : 'Checked formatting for'} ${files.length} files.`);
+  console.log(
+    `${mode === 'format' ? 'Formatted' : 'Checked formatting for'} ${files.length} files.`,
+  );
 } else {
   throw new Error('Expected syntax, lint, format, or format-check');
 }

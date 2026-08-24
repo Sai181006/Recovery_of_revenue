@@ -1,6 +1,6 @@
-# Limitations and Phase 6 integration gate
+# Limitations after Phase 7
 
-The repository currently proves local deterministic behavior, not production readiness or incremental revenue.
+The repository proves credential-independent deterministic behavior and a production-style boot boundary, not production readiness, live integration, hosting, or incremental revenue.
 
 Still required before an integrated submission claim:
 
@@ -11,7 +11,9 @@ Still required before an integrated submission claim:
 - Select and evaluate a live model/provider; keep deterministic fallback and never broaden eligibility.
 - Decide whether simulated messaging is acceptable; otherwise approve consent, provider, and deliverability setup.
 - Replace demo role headers with real authentication/authorization for any hosted environment.
-- Add full semantic TypeScript analysis when the package registry/toolchain is available.
+- Replace local single-process SQLite with a production-capable transactional design only in Phase 8 after repository contracts are reviewed.
 - Review privacy, PCI/RBI applicability, retention, tenant isolation, incident handling, and deployment security.
 
 Node's built-in SQLite currently emits an experimental warning. Synthetic fixtures and outcomes cannot establish causal lift. The approved-domain validator does not prove that a URL belongs to the correct customer/case; that requires account-specific trusted-flow evidence.
+
+Phase 7 configuration validates modes and conditional fields but is not a secret manager. `.env` remains local-only, production authentication is absent, demo role headers are trusted input, telemetry is only an injected no-op/test boundary, and graceful shutdown is single-process. The in-memory and SQLite adapters are not yet a shared Phase 8 repository contract suite. No external queue, concurrency control, migration system, reconciliation worker, retry/dead-letter mechanism, backup/restore, retention workflow, rate limiting, or deployment artifact has been added.

@@ -1,3 +1,32 @@
-import { existsSync,mkdirSync,rmSync } from 'node:fs';import { basename,dirname,resolve } from 'node:path';import { scenarios } from '../fixtures/scenarios.ts';import { defaultPolicy } from '../src/default-policy.ts';import { Pipeline } from '../src/pipeline.ts';import { Store } from '../src/store.ts';
-const dataDir=resolve('data'),database=resolve(dataDir,'recovery.sqlite');function assertSafe(path:string){if(dirname(path)!==dataDir||!['recovery.sqlite','recovery.sqlite-shm','recovery.sqlite-wal'].includes(basename(path)))throw new Error(`unsafe demo data target: ${path}`)}function reset(){for(const suffix of ['','-shm','-wal']){const target=`${database}${suffix}`;assertSafe(target);if(existsSync(target))rmSync(target)}console.log(`Reset demo database files in ${dataDir}`)}function seed(){mkdirSync(dataDir,{recursive:true});const store=new Store(database),pipeline=new Pipeline(store,defaultPolicy);for(const scenario of scenarios)for(const event of scenario.events)pipeline.process(event,scenario.now);console.log(`Seeded ${scenarios.length} scenarios: ${store.counts().inbox} inbox receipts, ${store.counts().outbox} simulated outbox items`)}
-if(process.argv[2]==='reset')reset();else if(process.argv[2]==='seed'){reset();seed()}else{console.error('Usage: npm run demo:reset | npm run demo:seed');process.exitCode=2}
+import { createApplication } from '../src/application.ts';
+import { resetDemoDatabase } from '../src/demo-data.ts';
+import { systemClock } from '../src/ports.ts';
+import { seedDemoFixtures } from '../src/seeding.ts';
+import { Store } from '../src/store.ts';
+
+const database = 'data/recovery.sqlite';
+
+function reset() {
+  const dataDir = resetDemoDatabase(database);
+  console.log(`Reset demo database files in ${dataDir}`);
+}
+
+function seed() {
+  reset();
+  const application = createApplication({
+    repository: new Store(database),
+    clock: systemClock,
+  });
+  const counts = seedDemoFixtures(application);
+  application.close();
+  console.log(
+    `Seeded 14 scenarios: ${counts.inbox} inbox receipts, ${counts.outbox} simulated outbox items`,
+  );
+}
+
+if (process.argv[2] === 'reset') reset();
+else if (process.argv[2] === 'seed') seed();
+else {
+  console.error('Usage: npm run demo:reset | npm run demo:seed');
+  process.exitCode = 2;
+}

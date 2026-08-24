@@ -1,8 +1,94 @@
-import test from 'node:test';import assert from 'node:assert/strict';import { defaultPolicy } from '../src/default-policy.ts';import { Pipeline } from '../src/pipeline.ts';import { Store } from '../src/store.ts';import type { Advisor,AdvisorInput } from '../src/advisor.ts';import type { RecoveryEvent } from '../src/types.ts';
-const event:RecoveryEvent={schemaVersion:'1.0',eventId:'evt_advisor',merchantId:'merchant_demo',subscriptionId:'sub_advisor',customerRef:'cust_advisor',type:'subscription.pending',occurredAt:'2026-08-23T12:00:00.000Z',receivedAt:'2026-08-23T12:00:00.000Z',amountMinor:129900,currency:'INR',consent:true,suppressed:false,contactAvailable:true,identityConsistent:true,rawFailure:{source:'customer',reason:'insufficient_funds'}};const output=(selectedAction='WAIT')=>({schemaVersion:'1.0',selectedAction,reasonCodes:['CONSERVATIVE_CHOICE'],rationale:'Wait for a safer next step.',confidence:0.9,abstain:false});const adapter=(rank:(input:AdvisorInput)=>unknown):Advisor=>({name:'test-advisor',version:'test-v1',configVersion:'config-v1',rank});const run=(advisor:Advisor)=>new Pipeline(new Store(),defaultPolicy,advisor).process(event).decisions[0];
-test('advisor receives only bounded redacted context and may choose only eligible action',()=>{let seen:AdvisorInput|undefined;const decision=run(adapter(input=>{seen=input;return output('WAIT')}));assert.equal(decision.selectedAction,'WAIT');assert.equal(decision.selectionSource,'advisor');assert.deepEqual(Object.keys(seen!).sort(),['caseState','eligibleActions','failure','policyVersion','schemaVersion','subscriptionState']);assert.equal(JSON.stringify(seen).includes('cust_advisor'),false)});
-test('unknown action is rejected with deterministic fallback',()=>{const decision=run(adapter(()=>output('CHARGE_CARD')));assert.equal(decision.selectedAction,'SEND_GENTLE_REMINDER');assert.equal(decision.selectionSource,'deterministic_fallback');assert.equal(decision.validationError,'action_not_eligible')});
-test('unsafe extra fields make the complete output invalid',()=>{const decision=run(adapter(()=>({...output('WAIT'),discountPercent:100})));assert.equal(decision.selectionSource,'deterministic_fallback');assert.equal(decision.validationError,'unexpected_or_missing_fields')});
-test('unavailable advisor falls back without blocking processing',()=>{const decision=run(adapter(()=>{throw new Error('unavailable')}));assert.equal(decision.selectedAction,'SEND_GENTLE_REMINDER');assert.equal(decision.validationError,'advisor_threw')});
-test('low confidence and explicit abstention select WAIT when eligible',()=>{for(const patch of [{confidence:0.2},{abstain:true}]){const decision=run(adapter(()=>({...output('SEND_GENTLE_REMINDER'),...patch})));assert.equal(decision.selectedAction,'WAIT');assert.equal(decision.selectionSource,'advisor_abstention')}});
-test('identical bounded input and adapter are stable across runs',()=>{const first=run(adapter(()=>output('WAIT')));const second=run(adapter(()=>output('WAIT')));assert.equal(first.selectedAction,second.selectedAction);assert.equal(first.inputHash,second.inputHash);assert.equal(first.outputHash,second.outputHash)});
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { defaultPolicy } from '../src/default-policy.ts';
+import { Pipeline } from '../src/pipeline.ts';
+import { Store } from '../src/store.ts';
+import type { Advisor, AdvisorInput } from '../src/advisor.ts';
+import type { RecoveryEvent } from '../src/types.ts';
+const event: RecoveryEvent = {
+  schemaVersion: '1.0',
+  eventId: 'evt_advisor',
+  merchantId: 'merchant_demo',
+  subscriptionId: 'sub_advisor',
+  customerRef: 'cust_advisor',
+  type: 'subscription.pending',
+  occurredAt: '2026-08-23T12:00:00.000Z',
+  receivedAt: '2026-08-23T12:00:00.000Z',
+  amountMinor: 129900,
+  currency: 'INR',
+  consent: true,
+  suppressed: false,
+  contactAvailable: true,
+  identityConsistent: true,
+  rawFailure: { source: 'customer', reason: 'insufficient_funds' },
+};
+const output = (selectedAction = 'WAIT') => ({
+  schemaVersion: '1.0',
+  selectedAction,
+  reasonCodes: ['CONSERVATIVE_CHOICE'],
+  rationale: 'Wait for a safer next step.',
+  confidence: 0.9,
+  abstain: false,
+});
+const adapter = (rank: (input: AdvisorInput) => unknown): Advisor => ({
+  name: 'test-advisor',
+  version: 'test-v1',
+  configVersion: 'config-v1',
+  rank,
+});
+const run = (advisor: Advisor) =>
+  new Pipeline(new Store(), defaultPolicy, advisor).process(event).decisions[0];
+test('advisor receives only bounded redacted context and may choose only eligible action', () => {
+  let seen: AdvisorInput | undefined;
+  const decision = run(
+    adapter((input) => {
+      seen = input;
+      return output('WAIT');
+    }),
+  );
+  assert.equal(decision.selectedAction, 'WAIT');
+  assert.equal(decision.selectionSource, 'advisor');
+  assert.deepEqual(Object.keys(seen!).sort(), [
+    'caseState',
+    'eligibleActions',
+    'failure',
+    'policyVersion',
+    'schemaVersion',
+    'subscriptionState',
+  ]);
+  assert.equal(JSON.stringify(seen).includes('cust_advisor'), false);
+});
+test('unknown action is rejected with deterministic fallback', () => {
+  const decision = run(adapter(() => output('CHARGE_CARD')));
+  assert.equal(decision.selectedAction, 'SEND_GENTLE_REMINDER');
+  assert.equal(decision.selectionSource, 'deterministic_fallback');
+  assert.equal(decision.validationError, 'action_not_eligible');
+});
+test('unsafe extra fields make the complete output invalid', () => {
+  const decision = run(adapter(() => ({ ...output('WAIT'), discountPercent: 100 })));
+  assert.equal(decision.selectionSource, 'deterministic_fallback');
+  assert.equal(decision.validationError, 'unexpected_or_missing_fields');
+});
+test('unavailable advisor falls back without blocking processing', () => {
+  const decision = run(
+    adapter(() => {
+      throw new Error('unavailable');
+    }),
+  );
+  assert.equal(decision.selectedAction, 'SEND_GENTLE_REMINDER');
+  assert.equal(decision.validationError, 'advisor_threw');
+});
+test('low confidence and explicit abstention select WAIT when eligible', () => {
+  for (const patch of [{ confidence: 0.2 }, { abstain: true }]) {
+    const decision = run(adapter(() => ({ ...output('SEND_GENTLE_REMINDER'), ...patch })));
+    assert.equal(decision.selectedAction, 'WAIT');
+    assert.equal(decision.selectionSource, 'advisor_abstention');
+  }
+});
+test('identical bounded input and adapter are stable across runs', () => {
+  const first = run(adapter(() => output('WAIT')));
+  const second = run(adapter(() => output('WAIT')));
+  assert.equal(first.selectedAction, second.selectedAction);
+  assert.equal(first.inputHash, second.inputHash);
+  assert.equal(first.outputHash, second.outputHash);
+});

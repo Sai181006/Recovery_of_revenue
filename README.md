@@ -1,46 +1,50 @@
-# Revenue Recovery — deterministic local vertical slice
+# Revenue Recovery — Phase 7 application boundaries
 
-Phase 0–6 credential-independent implementation for failed recurring Razorpay subscriptions. It includes deterministic recovery mechanics, signed test-mode webhook ingress, a provider-neutral constrained-advisor gate, a responsive merchant workspace, offline batch evaluation, and submission hardening. There is no live model provider, messaging provider, credential handling, real payment link, or external side effect.
+Phase 0–7 credential-independent implementation for failed recurring Razorpay subscriptions. Phase 7 separates the deterministic application core, HTTP construction, SQLite, demo fixtures, configuration, and process lifecycle through explicit ports/adapters. The project still has no live Razorpay calls, live model, real messaging, production authentication, trusted real payment link, deployment, or production hosting.
 
 ## Requirements and setup
 
-- Node.js 24 or newer (the project uses built-in SQLite and erasable TypeScript execution)
+- Node.js 24 or newer
 - `npm install`
 
-For the fastest local start, run `npm run dev`, then open `http://localhost:3000`. This seeds the deterministic dataset and launches the merchant dashboard. Run `npm run demo` to execute the complete release gate before starting the same demo. The dashboard provides overview metrics, a searchable case queue, case evidence and decisions, bounded merchant controls, message previews, outcomes, the complete audit trail, and matched batch evaluation.
+For the deterministic merchant experience, run `npm run dev`, then open `http://localhost:3000`. It resets and seeds the fixture database before listening. `npm run demo` first executes the complete release gate and then starts the same seeded experience in explicit `demo` mode. The dashboard retains overview metrics, a searchable queue, case evidence and decisions, bounded controls, previews, outcomes, audit, and matched evaluation.
 
-Copy `.env.example` to `.env` only when you need to change `PORT`, `HOST`, or `DATA_PATH`. `.env` is ignored by Git. Optional provider values can remain empty; npm commands remain in `package.json` so setup is executable and reviewable rather than hidden in environment configuration.
+`npm start` is intentionally different: it launches explicit `production` mode and never seeds synthetic cases. On a clean data path, `/cases` is empty. “Production-style” describes the boot boundary only; it does not claim production infrastructure or readiness.
 
-Use `npm run demo:reset` to remove only the local `data/recovery.sqlite*` files and `npm run demo:seed` to rebuild the deterministic demo. Run `npm run release:check` for the complete test/evaluation chain plus required-artifact, secret, generated-data, and claim audits. JSON API routes remain available at `/cases`, `/evaluation`, `/health`, and `/webhook-receipts`. See `docs/DEMO_RUNBOOK.md`, `docs/SUBMISSION_CHECKLIST.md`, and `docs/LIMITATIONS.md`.
+Copy `.env.example` to `.env` only to change `HOST`, `PORT`, `DATA_PATH`, or `PUBLIC_DIR`. `APP_MODE` is validated as `demo`, `development`, or `production`; npm commands pass their intended mode explicitly. `WEBHOOK_ENABLED` defaults to `false` and conditionally requires `RAZORPAY_WEBHOOK_SECRET` only when enabled. Invalid configuration fails before listening and diagnostics name fields without printing values.
 
-## Razorpay test-mode webhook
+Use `npm run demo:reset` to remove only the local `data/recovery.sqlite*` files and `npm run demo:seed` to rebuild the deterministic demo without opening a port. Run `npm run release:check` for Prettier, ESLint plus safety lint, full semantic TypeScript checking, tests, scenarios, evaluation, artifact/secret/generated-data audits, and claim checks. JSON routes remain at `/cases`, `/evaluation`, `/health`, and `/webhook-receipts`.
 
-Set `RAZORPAY_WEBHOOK_SECRET` locally, start the server, and configure the test-mode webhook endpoint as `POST /webhooks/razorpay`. The handler verifies `X-Razorpay-Signature` against the untouched request bytes and uses `X-Razorpay-Event-Id` for deduplication. Every receipt is stored before mapping or business processing and can be inspected at `GET /webhook-receipts`.
+## Phase 7 module boundaries
 
-The default server context has no customer consent or approved contact route, so customer contact fails closed. Real merchant consent/contact context and Razorpay reconciliation credentials have deliberately not been added. Never commit `.env` or a webhook secret.
+- `src/application.ts` constructs application services from injected repository, clock, advisor, delivery/execution, and telemetry ports.
+- `src/ports.ts` defines the small operational boundaries; `src/store.ts` and `src/memory-store.ts` are SQLite and in-memory adapters.
+- `src/http-app.ts` constructs HTTP behavior but never listens, seeds, or creates storage.
+- `src/config.ts`, `src/runtime.ts`, and `src/server.ts` validate configuration, create resources, listen, and close HTTP/SQLite gracefully.
+- `src/seeding.ts` and demo tools exclusively own synthetic fixture seeding.
 
-## Constrained advisor boundary
+Importing application, HTTP, or server modules has no startup or seed side effects. Application tests use `MemoryStore` with an injected clock and no socket. Application/HTTP failures expose stable codes such as `BAD_REQUEST`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, and `INTERNAL_ERROR`; internal exception details are not returned.
 
-`src/advisor.ts` defines the Phase 3 model contract. An injected adapter receives only lifecycle state, normalized failure labels, policy version, and the deterministic eligible-action set. Strict validation rejects missing/extra fields, actions outside that set, oversized rationale, malformed confidence, and unsafe additions. Unavailable or invalid adapters fall back to fixed rules; abstention or confidence below `0.6` selects `WAIT` when eligible. Input/output hashes and adapter/config versions are stored with the decision.
+## Razorpay-shaped test webhook
 
-No live model adapter is configured. The automated suite uses deterministic, malformed, unavailable, low-confidence, and adversarial test adapters to prove the execution boundary without credentials or network access.
+Set `WEBHOOK_ENABLED=true` and `RAZORPAY_WEBHOOK_SECRET` locally, start the server, and configure the test-mode-shaped endpoint as `POST /webhooks/razorpay`. The handler verifies `X-Razorpay-Signature` against untouched bytes and uses `X-Razorpay-Event-Id` for deduplication. Every receipt is stored before mapping or business processing and is inspectable at `GET /webhook-receipts`.
 
-## Merchant and customer experience
+The default server context has no customer consent or approved contact route, so customer contact fails closed. This repository contains no Razorpay credentials, API calls, or genuine captured account lifecycle. Never commit `.env` or a webhook secret.
 
-`GET /cases` returns the merchant queue and `GET /cases/{id}` returns decisions, audit, simulated outbox, and outcomes. Merchant controls require `X-Merchant-Role`: operators/admins may call `POST /cases/{id}/suppress`; only admins may call `POST /cases/{id}/override` with an eligible `action`; operators/admins may call `POST /outbox/{id}/deliver` to simulate delivery.
+## Constrained advisor and experience
 
-Customer previews use fixed template version `recovery-en-v1`. Recovery destinations remain simulated. Future real URLs must be HTTPS and match an explicitly approved domain; tests cover deceptive subdomains and insecure URLs. Suppression is durable across later failure events, while a confirmed recovery still closes the case.
+`src/advisor.ts` defines the provider-neutral bounded contract. An injected adapter receives only lifecycle state, normalized failure labels, policy version, and the deterministic eligible set. Strict validation rejects missing/extra fields, actions outside that set, oversized rationale, malformed confidence, and unsafe additions. Unavailable or invalid adapters fall back to fixed rules; low confidence or abstention uses `WAIT` when eligible.
 
-## Batch evaluation
+No live model adapter is configured. Delivery and recovery destinations remain simulated. `GET /cases/{id}` exposes decisions, audit, outbox, and outcomes. Demo controls still use `X-Merchant-Role`; these headers are not production authentication.
 
-Run `npm run evaluate` to produce `reports/evaluation-v1.json`. The same report is inspectable at `GET /evaluation`. It compares no-added-customer-contact, fixed-rule, and bounded-advisor-simulation strategies across the same 14 fixtures and emits per-case traces, action mix, contact counts, synthetic recovery proxies, segments, and a hard release gate.
+## Evaluation and checks
 
-The recovery proxy is a declared deterministic label for three customer-remediable fixtures. It is not observed revenue, incremental lift, or causal evidence. Any prohibited/out-of-eligibility action, excess outbox item, guardrail contact, incomplete audit, or missing outcome fails the command.
+`npm run evaluate` writes `reports/evaluation-v1.json` and compares no-added-contact, fixed-rule, and bounded-advisor simulation across the same 14 fixtures. Synthetic recovery is a declared fixture label, not observed revenue, incremental lift, or causal evidence.
 
-Individual checks are `npm run format:check`, `npm run lint`, `npm run typecheck`, and `npm test`. Because this zero-dependency sandbox cannot fetch npm packages, `typecheck` performs Node's TypeScript parse/type-stripping validation; install a full static TypeScript checker before Phase 2.
+Individual gates are `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run scenarios`, and `npm run evaluate`. Phase 7 installs Prettier, ESLint, TypeScript, and Node typings; `npm run typecheck` performs strict semantic analysis with `tsc --noEmit`.
 
 ## Safety boundary
 
-Deterministic code owns ingestion, deduplication, monotonic projection, normalization, eligibility, cooldowns, caps, quiet hours, suppression, selection, simulated dispatch, and auditing. Raw failure fields are retained beneath the normalized failure. Unknown, contradictory, invalid, or identity-inconsistent inputs fail closed. Outbox rows are simulated and protected by unique dispatch keys.
+Deterministic code still owns verification, ingestion, deduplication, monotonic projection, normalization, eligibility, cooldowns, caps, quiet hours, suppression, dispatch authorization, idempotency, and audit. Unknown, contradictory, invalid, or identity-inconsistent inputs fail closed. Fixtures contain synthetic references only. Never add PAN, CVV, PIN, credentials, secrets, real contact details, or live payment URLs.
 
-Fixtures contain synthetic references only. Never add PAN, CVV, PIN, credentials, secrets, real contact details, or live payment URLs.
+See `docs/ARCHITECTURE.md`, `docs/DEMO_RUNBOOK.md`, `docs/LIMITATIONS.md`, and `docs/SUBMISSION_CHECKLIST.md`.

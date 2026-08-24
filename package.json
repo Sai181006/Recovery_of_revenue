@@ -1,23 +1,34 @@
 {
   "name": "revenue-recovery",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
-    "start": "node --env-file-if-exists=.env --experimental-strip-types src/api.ts",
-    "dev": "npm run demo:seed && npm start",
-    "demo": "npm run release:check && npm run demo:seed && npm start",
+    "start": "node --env-file-if-exists=.env --experimental-strip-types src/server.ts production",
+    "dev": "node --env-file-if-exists=.env --experimental-strip-types tools/demo-server.ts development",
+    "demo": "npm run release:check && node --env-file-if-exists=.env --experimental-strip-types tools/demo-server.ts demo",
     "scenarios": "node --experimental-strip-types src/cli.ts scenarios",
     "evaluate": "node --experimental-strip-types src/cli.ts evaluate",
     "demo:reset": "node --experimental-strip-types tools/demo.ts reset",
     "demo:seed": "node --experimental-strip-types tools/demo.ts seed",
     "test": "node --experimental-strip-types --test test/*.test.ts",
-    "typecheck": "node tools/check.mjs syntax",
-    "lint": "node tools/check.mjs lint",
-    "format": "node tools/check.mjs format",
-    "format:check": "node tools/check.mjs format-check",
+    "typecheck": "tsc --noEmit",
+    "lint:safety": "node tools/check.mjs lint",
+    "lint": "eslint . && npm run lint:safety",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "verify": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run scenarios && npm run evaluate",
     "release:check": "npm run verify && node tools/release.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.2.0",
+    "eslint": "^10.9.0",
+    "prettier": "^3.9.6",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.67.0"
   }
 }

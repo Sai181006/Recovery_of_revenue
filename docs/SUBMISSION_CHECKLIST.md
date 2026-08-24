@@ -4,7 +4,7 @@
 
 - [ ] Fresh clone installs with documented Node version.
 - [ ] `npm run release:check` passes.
-- [ ] `npm run demo:seed` and `npm start` work from a clean state.
+- [ ] `npm start` produces an empty clean production-style data path; `npm run dev` produces the seeded demo.
 - [ ] Primary and fixture fallback demos complete within the official time limit.
 
 ## External evidence

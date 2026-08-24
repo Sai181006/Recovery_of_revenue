@@ -1,19 +1,249 @@
 import type { RecoveryEvent, Scenario } from '../src/types.ts';
-const base=(id:string,type:RecoveryEvent['type'],at='2026-08-23T12:00:00.000Z'):RecoveryEvent=>({schemaVersion:'1.0',eventId:id,merchantId:'merchant_demo',subscriptionId:`sub_${id.replace(/[^a-z0-9]/gi,'_')}`,customerRef:`customer_${id.replace(/[^a-z0-9]/gi,'_')}`,type,occurredAt:at,receivedAt:at,amountMinor:129900,currency:'INR',consent:true,suppressed:false,contactAvailable:true,identityConsistent:true});
-const expected=(caseState:Scenario['expected']['caseState'],eligibleActions:Scenario['expected']['eligibleActions'],acceptableSelectedActions:Scenario['expected']['acceptableSelectedActions'],outboxCount:number):Scenario['expected']=>({caseState,eligibleActions,acceptableSelectedActions,prohibitedActions:['WAIT','SEND_GENTLE_REMINDER','SEND_ACTION_REQUIRED','SURFACE_PAYMENT_UPDATE_LINK','ESCALATE_TO_MERCHANT','SUPPRESS'].filter(x=>!eligibleActions.includes(x as never)) as Scenario['expected']['prohibitedActions'],outboxCount});
-export const scenarios:Scenario[]=[
- {id:'insufficient-funds',description:'Customer can fund account; gentle reminder is allowed.',now:'2026-08-23T12:00:00.000Z',events:[{...base('evt_funds','subscription.pending'),rawFailure:{source:'customer',reason:'insufficient_funds',description:'Redacted decline'}}],expected:expected('OPEN_PENDING',['WAIT','SEND_GENTLE_REMINDER'],['SEND_GENTLE_REMINDER'],1)},
- {id:'expired-card-link',description:'Expired card with trusted update flow marker.',now:'2026-08-23T12:00:00.000Z',events:[{...base('evt_expired','subscription.pending'),trustedUpdateLinkAvailable:true,rawFailure:{source:'customer',reason:'expired_card',code:'BAD_REQUEST_ERROR'}}],expected:expected('OPEN_PENDING',['WAIT','SEND_ACTION_REQUIRED','SURFACE_PAYMENT_UPDATE_LINK'],['SURFACE_PAYMENT_UPDATE_LINK'],1)},
- {id:'cancelled-mandate',description:'Cancelled mandate requires customer action without a link.',now:'2026-08-23T12:00:00.000Z',events:[{...base('evt_mandate','subscription.pending'),rawFailure:{source:'customer',reason:'mandate_cancelled'}}],expected:expected('OPEN_PENDING',['WAIT','SEND_ACTION_REQUIRED'],['SEND_ACTION_REQUIRED'],1)},
- {id:'gateway-retry',description:'Imminent platform retry causes waiting.',now:'2026-08-23T12:00:00.000Z',events:[{...base('evt_gateway','subscription.pending'),retryAt:'2026-08-23T13:00:00.000Z',rawFailure:{source:'gateway',reason:'gateway_timeout'}}],expected:expected('OPEN_PENDING',['WAIT'],['WAIT'],0)},
- {id:'merchant-integration',description:'Merchant-owned configuration error is escalated.',now:'2026-08-23T12:00:00.000Z',events:[{...base('evt_config','subscription.pending'),rawFailure:{source:'business',reason:'configuration_error',field:'plan_id'}}],expected:expected('OPEN_PENDING',['ESCALATE_TO_MERCHANT'],['ESCALATE_TO_MERCHANT'],1)},
- {id:'halted',description:'Halted subscription is manually escalated.',now:'2026-08-23T12:00:00.000Z',events:[{...base('evt_halted','subscription.halted'),rawFailure:{source:'customer',reason:'insufficient_funds'}}],expected:expected('OPEN_HALTED',['ESCALATE_TO_MERCHANT'],['ESCALATE_TO_MERCHANT'],1)},
- {id:'opt-out',description:'Opted-out customer is suppressed.',now:'2026-08-23T12:00:00.000Z',events:[{...base('evt_optout','subscription.pending'),suppressed:true,rawFailure:{source:'customer',reason:'insufficient_funds'}}],expected:expected('OPEN_PENDING',['SUPPRESS'],['SUPPRESS'],0)},
- {id:'quiet-hours',description:'Contact is blocked during policy quiet hours.',now:'2026-08-23T23:00:00.000Z',events:[{...base('evt_quiet','subscription.pending','2026-08-23T23:00:00.000Z'),rawFailure:{source:'customer',reason:'insufficient_funds'}}],expected:expected('OPEN_PENDING',['WAIT'],['WAIT'],0)},
- {id:'unknown-failure',description:'Unknown evidence fails safely to wait or review.',now:'2026-08-23T12:00:00.000Z',events:[{...base('evt_unknown','subscription.pending'),rawFailure:{description:'Unclassified redacted error'}}],expected:expected('OPEN_PENDING',['WAIT','ESCALATE_TO_MERCHANT'],['ESCALATE_TO_MERCHANT'],1)},
- {id:'contradictory-evidence',description:'Customer reason with gateway source is ambiguous.',now:'2026-08-23T12:00:00.000Z',events:[{...base('evt_conflict','subscription.pending'),rawFailure:{source:'gateway',reason:'expired_card'}}],expected:expected('AMBIGUOUS',['SUPPRESS'],['SUPPRESS'],0)},
- {id:'invalid-event',description:'Invalid fixture event fails closed.',now:'2026-08-23T12:00:00.000Z',events:[base('evt_invalid','invalid')],expected:expected('AMBIGUOUS',['SUPPRESS'],['SUPPRESS'],0)},
- {id:'duplicate-delivery',description:'The same event is received twice but dispatched once.',now:'2026-08-23T12:00:00.000Z',events:[{...base('evt_duplicate','subscription.pending'),rawFailure:{source:'customer',reason:'insufficient_funds'}},{...base('evt_duplicate','subscription.pending'),receivedAt:'2026-08-23T12:01:00.000Z',rawFailure:{source:'customer',reason:'insufficient_funds'}}],expected:expected('OPEN_PENDING',['WAIT','SEND_GENTLE_REMINDER'],['SEND_GENTLE_REMINDER'],1)},
- {id:'out-of-order-recovery',description:'A stale pending event cannot regress a confirmed recovery.',now:'2026-08-23T12:00:00.000Z',events:[base('evt_recovered','subscription.charged','2026-08-23T12:00:00.000Z'),{...base('evt_stale','subscription.pending','2026-08-23T11:00:00.000Z'),subscriptionId:'sub_evt_recovered',customerRef:'customer_evt_recovered',receivedAt:'2026-08-23T12:05:00.000Z',rawFailure:{source:'customer',reason:'insufficient_funds'}}],expected:expected('RECOVERED',['SUPPRESS'],['SUPPRESS'],0)},
- {id:'missing-contact',description:'Missing approved route blocks customer contact.',now:'2026-08-23T12:00:00.000Z',events:[{...base('evt_nocontact','subscription.pending'),contactAvailable:false,rawFailure:{source:'customer',reason:'insufficient_funds'}}],expected:expected('OPEN_PENDING',['WAIT'],['WAIT'],0)}
+const base = (
+  id: string,
+  type: RecoveryEvent['type'],
+  at = '2026-08-23T12:00:00.000Z',
+): RecoveryEvent => ({
+  schemaVersion: '1.0',
+  eventId: id,
+  merchantId: 'merchant_demo',
+  subscriptionId: `sub_${id.replace(/[^a-z0-9]/gi, '_')}`,
+  customerRef: `customer_${id.replace(/[^a-z0-9]/gi, '_')}`,
+  type,
+  occurredAt: at,
+  receivedAt: at,
+  amountMinor: 129900,
+  currency: 'INR',
+  consent: true,
+  suppressed: false,
+  contactAvailable: true,
+  identityConsistent: true,
+});
+const expected = (
+  caseState: Scenario['expected']['caseState'],
+  eligibleActions: Scenario['expected']['eligibleActions'],
+  acceptableSelectedActions: Scenario['expected']['acceptableSelectedActions'],
+  outboxCount: number,
+): Scenario['expected'] => ({
+  caseState,
+  eligibleActions,
+  acceptableSelectedActions,
+  prohibitedActions: [
+    'WAIT',
+    'SEND_GENTLE_REMINDER',
+    'SEND_ACTION_REQUIRED',
+    'SURFACE_PAYMENT_UPDATE_LINK',
+    'ESCALATE_TO_MERCHANT',
+    'SUPPRESS',
+  ].filter(
+    (x) => !eligibleActions.includes(x as never),
+  ) as Scenario['expected']['prohibitedActions'],
+  outboxCount,
+});
+export const scenarios: Scenario[] = [
+  {
+    id: 'insufficient-funds',
+    description: 'Customer can fund account; gentle reminder is allowed.',
+    now: '2026-08-23T12:00:00.000Z',
+    events: [
+      {
+        ...base('evt_funds', 'subscription.pending'),
+        rawFailure: {
+          source: 'customer',
+          reason: 'insufficient_funds',
+          description: 'Redacted decline',
+        },
+      },
+    ],
+    expected: expected(
+      'OPEN_PENDING',
+      ['WAIT', 'SEND_GENTLE_REMINDER'],
+      ['SEND_GENTLE_REMINDER'],
+      1,
+    ),
+  },
+  {
+    id: 'expired-card-link',
+    description: 'Expired card with trusted update flow marker.',
+    now: '2026-08-23T12:00:00.000Z',
+    events: [
+      {
+        ...base('evt_expired', 'subscription.pending'),
+        trustedUpdateLinkAvailable: true,
+        rawFailure: { source: 'customer', reason: 'expired_card', code: 'BAD_REQUEST_ERROR' },
+      },
+    ],
+    expected: expected(
+      'OPEN_PENDING',
+      ['WAIT', 'SEND_ACTION_REQUIRED', 'SURFACE_PAYMENT_UPDATE_LINK'],
+      ['SURFACE_PAYMENT_UPDATE_LINK'],
+      1,
+    ),
+  },
+  {
+    id: 'cancelled-mandate',
+    description: 'Cancelled mandate requires customer action without a link.',
+    now: '2026-08-23T12:00:00.000Z',
+    events: [
+      {
+        ...base('evt_mandate', 'subscription.pending'),
+        rawFailure: { source: 'customer', reason: 'mandate_cancelled' },
+      },
+    ],
+    expected: expected(
+      'OPEN_PENDING',
+      ['WAIT', 'SEND_ACTION_REQUIRED'],
+      ['SEND_ACTION_REQUIRED'],
+      1,
+    ),
+  },
+  {
+    id: 'gateway-retry',
+    description: 'Imminent platform retry causes waiting.',
+    now: '2026-08-23T12:00:00.000Z',
+    events: [
+      {
+        ...base('evt_gateway', 'subscription.pending'),
+        retryAt: '2026-08-23T13:00:00.000Z',
+        rawFailure: { source: 'gateway', reason: 'gateway_timeout' },
+      },
+    ],
+    expected: expected('OPEN_PENDING', ['WAIT'], ['WAIT'], 0),
+  },
+  {
+    id: 'merchant-integration',
+    description: 'Merchant-owned configuration error is escalated.',
+    now: '2026-08-23T12:00:00.000Z',
+    events: [
+      {
+        ...base('evt_config', 'subscription.pending'),
+        rawFailure: { source: 'business', reason: 'configuration_error', field: 'plan_id' },
+      },
+    ],
+    expected: expected('OPEN_PENDING', ['ESCALATE_TO_MERCHANT'], ['ESCALATE_TO_MERCHANT'], 1),
+  },
+  {
+    id: 'halted',
+    description: 'Halted subscription is manually escalated.',
+    now: '2026-08-23T12:00:00.000Z',
+    events: [
+      {
+        ...base('evt_halted', 'subscription.halted'),
+        rawFailure: { source: 'customer', reason: 'insufficient_funds' },
+      },
+    ],
+    expected: expected('OPEN_HALTED', ['ESCALATE_TO_MERCHANT'], ['ESCALATE_TO_MERCHANT'], 1),
+  },
+  {
+    id: 'opt-out',
+    description: 'Opted-out customer is suppressed.',
+    now: '2026-08-23T12:00:00.000Z',
+    events: [
+      {
+        ...base('evt_optout', 'subscription.pending'),
+        suppressed: true,
+        rawFailure: { source: 'customer', reason: 'insufficient_funds' },
+      },
+    ],
+    expected: expected('OPEN_PENDING', ['SUPPRESS'], ['SUPPRESS'], 0),
+  },
+  {
+    id: 'quiet-hours',
+    description: 'Contact is blocked during policy quiet hours.',
+    now: '2026-08-23T23:00:00.000Z',
+    events: [
+      {
+        ...base('evt_quiet', 'subscription.pending', '2026-08-23T23:00:00.000Z'),
+        rawFailure: { source: 'customer', reason: 'insufficient_funds' },
+      },
+    ],
+    expected: expected('OPEN_PENDING', ['WAIT'], ['WAIT'], 0),
+  },
+  {
+    id: 'unknown-failure',
+    description: 'Unknown evidence fails safely to wait or review.',
+    now: '2026-08-23T12:00:00.000Z',
+    events: [
+      {
+        ...base('evt_unknown', 'subscription.pending'),
+        rawFailure: { description: 'Unclassified redacted error' },
+      },
+    ],
+    expected: expected(
+      'OPEN_PENDING',
+      ['WAIT', 'ESCALATE_TO_MERCHANT'],
+      ['ESCALATE_TO_MERCHANT'],
+      1,
+    ),
+  },
+  {
+    id: 'contradictory-evidence',
+    description: 'Customer reason with gateway source is ambiguous.',
+    now: '2026-08-23T12:00:00.000Z',
+    events: [
+      {
+        ...base('evt_conflict', 'subscription.pending'),
+        rawFailure: { source: 'gateway', reason: 'expired_card' },
+      },
+    ],
+    expected: expected('AMBIGUOUS', ['SUPPRESS'], ['SUPPRESS'], 0),
+  },
+  {
+    id: 'invalid-event',
+    description: 'Invalid fixture event fails closed.',
+    now: '2026-08-23T12:00:00.000Z',
+    events: [base('evt_invalid', 'invalid')],
+    expected: expected('AMBIGUOUS', ['SUPPRESS'], ['SUPPRESS'], 0),
+  },
+  {
+    id: 'duplicate-delivery',
+    description: 'The same event is received twice but dispatched once.',
+    now: '2026-08-23T12:00:00.000Z',
+    events: [
+      {
+        ...base('evt_duplicate', 'subscription.pending'),
+        rawFailure: { source: 'customer', reason: 'insufficient_funds' },
+      },
+      {
+        ...base('evt_duplicate', 'subscription.pending'),
+        receivedAt: '2026-08-23T12:01:00.000Z',
+        rawFailure: { source: 'customer', reason: 'insufficient_funds' },
+      },
+    ],
+    expected: expected(
+      'OPEN_PENDING',
+      ['WAIT', 'SEND_GENTLE_REMINDER'],
+      ['SEND_GENTLE_REMINDER'],
+      1,
+    ),
+  },
+  {
+    id: 'out-of-order-recovery',
+    description: 'A stale pending event cannot regress a confirmed recovery.',
+    now: '2026-08-23T12:00:00.000Z',
+    events: [
+      base('evt_recovered', 'subscription.charged', '2026-08-23T12:00:00.000Z'),
+      {
+        ...base('evt_stale', 'subscription.pending', '2026-08-23T11:00:00.000Z'),
+        subscriptionId: 'sub_evt_recovered',
+        customerRef: 'customer_evt_recovered',
+        receivedAt: '2026-08-23T12:05:00.000Z',
+        rawFailure: { source: 'customer', reason: 'insufficient_funds' },
+      },
+    ],
+    expected: expected('RECOVERED', ['SUPPRESS'], ['SUPPRESS'], 0),
+  },
+  {
+    id: 'missing-contact',
+    description: 'Missing approved route blocks customer contact.',
+    now: '2026-08-23T12:00:00.000Z',
+    events: [
+      {
+        ...base('evt_nocontact', 'subscription.pending'),
+        contactAvailable: false,
+        rawFailure: { source: 'customer', reason: 'insufficient_funds' },
+      },
+    ],
+    expected: expected('OPEN_PENDING', ['WAIT'], ['WAIT'], 0),
+  },
 ];

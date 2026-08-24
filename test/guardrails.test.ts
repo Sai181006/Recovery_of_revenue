@@ -1,10 +1,74 @@
-import test from 'node:test'; import assert from 'node:assert/strict'; import { scenarios } from '../fixtures/scenarios.ts'; import { runScenario } from '../src/scenario-runner.ts';
-import { defaultPolicy } from '../src/default-policy.ts'; import { Pipeline } from '../src/pipeline.ts'; import { Store } from '../src/store.ts'; import type { RecoveryEvent } from '../src/types.ts';
-const get=(id:string)=>runScenario(scenarios.find(s=>s.id===id)!);
-for(const id of ['quiet-hours','opt-out','unknown-failure','contradictory-evidence','invalid-event','missing-contact'])test(`guardrail: ${id}`,()=>assert.equal(get(id).pass,true));
-test('duplicate inbox receipts have one logical decision and one outbox item',()=>{const r=get('duplicate-delivery');assert.equal(r.view.decisions.length,1);assert.equal(r.view.outbox.length,1);assert.equal(r.view.audit.filter((a:{kind:string})=>a.kind==='DUPLICATE_IGNORED').length,1)});
-test('out-of-order event cannot regress confirmed active state',()=>{const r=get('out-of-order-recovery');assert.equal(r.view.case.subscriptionState,'active');assert.equal(r.view.case.state,'RECOVERED');assert.ok(r.view.audit.some((a:{kind:string})=>a.kind==='STALE_EVENT_IGNORED'))});
-test('raw failure source fields survive normalization',()=>{const r=get('expired-card-link');assert.deepEqual(r.view.case.failure.raw,{source:'customer',reason:'expired_card',code:'BAD_REQUEST_ERROR'})});
-const event=(eventId:string,at:string):RecoveryEvent=>({schemaVersion:'1.0',eventId,merchantId:'merchant_demo',subscriptionId:'sub_contact_limits',customerRef:'customer_contact_limits',type:'subscription.pending',occurredAt:at,receivedAt:at,amountMinor:129900,currency:'INR',consent:true,suppressed:false,contactAvailable:true,identityConsistent:true,rawFailure:{source:'customer',reason:'insufficient_funds'}});
-test('cooldown blocks a second customer contact',()=>{const pipeline=new Pipeline(new Store(),defaultPolicy);pipeline.process(event('evt_cool_1','2026-08-20T12:00:00.000Z'));const view=pipeline.process(event('evt_cool_2','2026-08-20T13:00:00.000Z'));assert.equal(view.decisions.at(-1).selectedAction,'WAIT');assert.equal(view.outbox.length,1)});
-test('per-case cap blocks contact after two prior touches',()=>{const pipeline=new Pipeline(new Store(),defaultPolicy);pipeline.process(event('evt_cap_1','2026-08-18T12:00:00.000Z'));pipeline.process(event('evt_cap_2','2026-08-20T12:00:00.000Z'));const view=pipeline.process(event('evt_cap_3','2026-08-22T12:00:00.000Z'));assert.equal(view.case.contactCount,2);assert.equal(view.decisions.at(-1).selectedAction,'WAIT');assert.equal(view.outbox.length,2)});
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { scenarios } from '../fixtures/scenarios.ts';
+import { runScenario } from '../src/scenario-runner.ts';
+import { defaultPolicy } from '../src/default-policy.ts';
+import { Pipeline } from '../src/pipeline.ts';
+import { Store } from '../src/store.ts';
+import type { RecoveryEvent } from '../src/types.ts';
+const get = (id: string) => runScenario(scenarios.find((s) => s.id === id)!);
+for (const id of [
+  'quiet-hours',
+  'opt-out',
+  'unknown-failure',
+  'contradictory-evidence',
+  'invalid-event',
+  'missing-contact',
+])
+  test(`guardrail: ${id}`, () => assert.equal(get(id).pass, true));
+test('duplicate inbox receipts have one logical decision and one outbox item', () => {
+  const r = get('duplicate-delivery');
+  assert.equal(r.view.decisions.length, 1);
+  assert.equal(r.view.outbox.length, 1);
+  assert.equal(
+    r.view.audit.filter((a: { kind: string }) => a.kind === 'DUPLICATE_IGNORED').length,
+    1,
+  );
+});
+test('out-of-order event cannot regress confirmed active state', () => {
+  const r = get('out-of-order-recovery');
+  assert.equal(r.view.case.subscriptionState, 'active');
+  assert.equal(r.view.case.state, 'RECOVERED');
+  assert.ok(r.view.audit.some((a: { kind: string }) => a.kind === 'STALE_EVENT_IGNORED'));
+});
+test('raw failure source fields survive normalization', () => {
+  const r = get('expired-card-link');
+  assert.deepEqual(r.view.case.failure!.raw, {
+    source: 'customer',
+    reason: 'expired_card',
+    code: 'BAD_REQUEST_ERROR',
+  });
+});
+const event = (eventId: string, at: string): RecoveryEvent => ({
+  schemaVersion: '1.0',
+  eventId,
+  merchantId: 'merchant_demo',
+  subscriptionId: 'sub_contact_limits',
+  customerRef: 'customer_contact_limits',
+  type: 'subscription.pending',
+  occurredAt: at,
+  receivedAt: at,
+  amountMinor: 129900,
+  currency: 'INR',
+  consent: true,
+  suppressed: false,
+  contactAvailable: true,
+  identityConsistent: true,
+  rawFailure: { source: 'customer', reason: 'insufficient_funds' },
+});
+test('cooldown blocks a second customer contact', () => {
+  const pipeline = new Pipeline(new Store(), defaultPolicy);
+  pipeline.process(event('evt_cool_1', '2026-08-20T12:00:00.000Z'));
+  const view = pipeline.process(event('evt_cool_2', '2026-08-20T13:00:00.000Z'));
+  assert.equal(view.decisions.at(-1)!.selectedAction, 'WAIT');
+  assert.equal(view.outbox.length, 1);
+});
+test('per-case cap blocks contact after two prior touches', () => {
+  const pipeline = new Pipeline(new Store(), defaultPolicy);
+  pipeline.process(event('evt_cap_1', '2026-08-18T12:00:00.000Z'));
+  pipeline.process(event('evt_cap_2', '2026-08-20T12:00:00.000Z'));
+  const view = pipeline.process(event('evt_cap_3', '2026-08-22T12:00:00.000Z'));
+  assert.equal(view.case.contactCount, 2);
+  assert.equal(view.decisions.at(-1)!.selectedAction, 'WAIT');
+  assert.equal(view.outbox.length, 2);
+});
