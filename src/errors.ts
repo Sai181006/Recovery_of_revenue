@@ -1,5 +1,6 @@
 export const ERROR_CODES = [
   'BAD_REQUEST',
+  'UNAUTHORIZED',
   'FORBIDDEN',
   'NOT_FOUND',
   'CONFLICT',
@@ -23,6 +24,7 @@ export class AppError extends Error {
 
 const mapping: Record<ErrorCode, { status: number; message: string }> = {
   BAD_REQUEST: { status: 400, message: 'The request is invalid.' },
+  UNAUTHORIZED: { status: 401, message: 'Authentication is required.' },
   FORBIDDEN: { status: 403, message: 'The operation is not permitted.' },
   NOT_FOUND: { status: 404, message: 'The requested resource was not found.' },
   CONFLICT: { status: 409, message: 'The operation conflicts with current state.' },
@@ -35,7 +37,7 @@ export function toHttpError(error: unknown) {
   const appError =
     error instanceof AppError
       ? error
-      : error instanceof SyntaxError
+      : error instanceof SyntaxError || error instanceof URIError
         ? new AppError('BAD_REQUEST', 'invalid syntax')
         : new AppError('INTERNAL_ERROR', 'internal');
   const safe = mapping[appError.code];

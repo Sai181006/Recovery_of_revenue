@@ -9,7 +9,8 @@ const required = [
   'docs/SUBMISSION_CHECKLIST.md',
   'reports/evaluation-v1.json',
 ];
-const ignored = new Set(['.git', '.npm-cache', 'node_modules', 'data']);
+// .env is git-ignored and expected to hold real local secrets, so it is not scanned.
+const ignored = new Set(['.git', '.npm-cache', 'node_modules', 'data', '.env']);
 const files = walk('.').filter(
   (path) => !path.startsWith('reports\\') || path.endsWith('evaluation-v1.json'),
 );
@@ -26,7 +27,7 @@ for (const path of required)
 const secretPatterns = [
   /rzp_live_[A-Za-z0-9]+/,
   /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,
-  /(?:KEY_SECRET|WEBHOOK_SECRET|API_KEY)[ \t]*=[ \t]*[^ \t\r\n#]+/,
+  /(?:KEY_SECRET|WEBHOOK_SECRET|API_KEY|ADMIN_TOKEN)[ \t]*=[ \t]*[^ \t\r\n#]+/,
 ];
 for (const path of files) {
   const source = readFileSync(path, 'utf8');

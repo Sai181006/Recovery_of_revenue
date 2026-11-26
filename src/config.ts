@@ -15,6 +15,8 @@ export type RuntimeConfig = {
   webhookEnabled: boolean;
   webhookSecret: string;
   webhookContext: WebhookContext;
+  readOnly: boolean;
+  adminToken?: string | undefined;
   publicBaseUrl?: string | undefined;
   modelProvider?: string | undefined;
   modelName?: string | undefined;
@@ -71,6 +73,8 @@ export function parseRuntimeConfig(
       contactAvailable: present(environment.WEBHOOK_ASSUME_CONTACT_ROUTE) === 'true',
       trustedUpdateLinkAvailable: false,
     },
+    readOnly: present(environment.READ_ONLY) === 'true',
+    ...(present(environment.ADMIN_TOKEN) ? { adminToken: present(environment.ADMIN_TOKEN) } : {}),
     ...(present(environment.PUBLIC_BASE_URL)
       ? { publicBaseUrl: present(environment.PUBLIC_BASE_URL) }
       : {}),

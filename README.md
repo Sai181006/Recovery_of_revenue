@@ -35,7 +35,7 @@ The default server context has no customer consent or approved contact route, so
 
 `src/advisor.ts` defines the provider-neutral bounded contract. An injected adapter receives only lifecycle state, normalized failure labels, policy version, and the deterministic eligible set. Strict validation rejects missing/extra fields, actions outside that set, oversized rationale, malformed confidence, and unsafe additions. Unavailable or invalid adapters fall back to fixed rules; low confidence or abstention uses `WAIT` when eligible.
 
-No live model adapter is configured. Delivery and recovery destinations remain simulated. `GET /cases/{id}` exposes decisions, audit, outbox, and outcomes. Demo controls still use `X-Merchant-Role`; these headers are not production authentication.
+No live model adapter is configured. Delivery and recovery destinations remain simulated. `GET /cases/{id}` exposes decisions, audit, outbox, and outcomes. Demo controls still use `X-Merchant-Role`; these headers are not authentication. Access rules: `READ_ONLY=true` refuses every control (for a public demo). In `production` mode, `/cases`, `/webhook-receipts` and all controls require `ADMIN_TOKEN` as `Authorization: Bearer <token>`, and controls are refused if no token is configured. The token is one shared secret, not per-user authentication, and the dashboard does not send it yet, so in production mode the dashboard cannot load case data.
 
 ## Evaluation and checks
 

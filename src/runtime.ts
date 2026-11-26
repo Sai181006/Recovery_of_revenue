@@ -26,6 +26,11 @@ export function createRuntime(config: RuntimeConfig, dependencies: RuntimeDepend
   const server = createHttpApp({
     application,
     publicDir: config.publicDir,
+    access: {
+      readOnly: config.readOnly,
+      adminToken: config.adminToken,
+      protectData: config.mode === 'production',
+    },
     readinessConfig: {
       webhookSecret: config.webhookEnabled ? config.webhookSecret : '',
       publicBaseUrl: config.publicBaseUrl,
