@@ -71,15 +71,19 @@ export function createHttpApp(options: HttpAppOptions) {
           'x-razorpay-event-id': header(req, 'x-razorpay-event-id'),
           'x-razorpay-signature': header(req, 'x-razorpay-signature'),
         });
+        // 401: bad signature. 500: processing rolled back, so Razorpay should retry.
+        // Every other verified delivery is acknowledged with 2xx, even when it is
+        // unsupported or needs reconciliation: retrying would not change the result,
+        // and repeated non-2xx responses can get the webhook disabled.
         json(
           res,
           result.processingStatus === 'REJECTED'
             ? 401
             : result.processingStatus === 'FAILED'
-              ? 500 // retryable: the transaction rolled back
+              ? 500
               : ['PROCESSED', 'DUPLICATE'].includes(result.processingStatus)
                 ? 202
-                : 422,
+                : 200,
           result,
         );
         return;

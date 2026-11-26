@@ -114,3 +114,24 @@ test('redaction removes credential and contact-shaped fields recursively', () =>
     safe: 'kept',
   });
 });
+test('unsigned requests are stored as metadata only, never their body', () => {
+  const { store, processor } = setup();
+  const body = Buffer.from(JSON.stringify({ filler: 'x'.repeat(50_000) }));
+  processor.process(body, {
+    'x-razorpay-event-id': 'rzp_evt_junk',
+    'x-razorpay-signature': '0'.repeat(64),
+  });
+  const receipt = store.webhookReceipts()[0]!;
+  assert.equal(receipt.verification, 'INVALID');
+  assert.ok(receipt.redacted_payload.length < 200, 'payload not stored');
+  assert.doesNotMatch(receipt.redacted_payload, /filler/);
+});
+test('identical deliveries in the same millisecond get distinct receipts', () => {
+  const { store, processor } = setup();
+  const x = signed(pendingPayload);
+  const headers = { 'x-razorpay-event-id': 'rzp_evt_same_ms', 'x-razorpay-signature': x.signature };
+  const at = '2026-08-23T12:00:00.000Z';
+  processor.process(x.raw, headers, at);
+  assert.equal(processor.process(x.raw, headers, at).processingStatus, 'DUPLICATE');
+  assert.equal(store.webhookReceipts().length, 2);
+});

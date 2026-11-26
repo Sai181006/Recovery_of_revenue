@@ -1,4 +1,4 @@
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import type { Pipeline } from './pipeline.ts';
 import {
   noopTelemetry,
@@ -160,23 +160,30 @@ export class WebhookProcessor {
     headers: Record<string, string | undefined>,
     receivedAt = this.clock.now(),
   ): WebhookResult {
-    const eventId = headers['x-razorpay-event-id'] ?? `missing_${digest(rawBody.toString('utf8'))}`;
-    const receiptId = `receipt_${digest(`${eventId}:${receivedAt}:${rawBody.toString('base64')}`)}`;
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(rawBody.toString('utf8'));
-    } catch {
-      parsed = { malformed: true };
-    }
-    const redacted = redact(parsed);
+    const eventId = (
+      headers['x-razorpay-event-id'] ?? `missing_${digest(rawBody.toString('utf8'))}`
+    ).slice(0, 128);
+    const receiptId = `receipt_${randomUUID()}`;
+    // Verify before reading the body. An unsigned request is stored only as
+    // metadata, so anonymous callers cannot fill the database with payloads.
     const valid = verifySignature(rawBody, headers['x-razorpay-signature'], this.secret);
+    let parsed: unknown = { malformed: true };
+    if (valid) {
+      try {
+        parsed = JSON.parse(rawBody.toString('utf8'));
+      } catch {
+        // stays { malformed: true }; mapping reports MALFORMED below
+      }
+    }
     this.store.recordWebhookReceipt({
       receiptId,
       eventId,
       receivedAt,
       verification: valid ? 'VERIFIED' : 'INVALID',
       processingStatus: valid ? 'RECEIVED' : 'REJECTED',
-      redactedPayload: redacted,
+      redactedPayload: valid
+        ? redact(parsed)
+        : { unverified: true, bytes: rawBody.length, sha256: digest(rawBody.toString('base64')) },
     });
     if (!valid) {
       this.telemetry.record('webhook.rejected', { eventId, reason: 'invalid_signature' });
