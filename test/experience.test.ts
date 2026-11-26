@@ -139,9 +139,12 @@ test('override dispatch and delivery update are idempotent', () => {
 });
 test('recovered cases reject suppression and override', () => {
   const store = new Store();
-  new Pipeline(store, defaultPolicy).process({
+  const pipeline = new Pipeline(store, defaultPolicy);
+  pipeline.process(event('evt_failure_experience'));
+  pipeline.process({
     ...event('evt_recovered_experience'),
     type: 'subscription.charged',
+    occurredAt: '2026-08-24T12:00:00.000Z',
   });
   const service = new MerchantExperience(store);
   assert.throws(

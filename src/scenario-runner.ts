@@ -1,6 +1,7 @@
 import { defaultPolicy } from './default-policy.ts';
 import { Pipeline } from './pipeline.ts';
 import { Store } from './store.ts';
+import type { ExistingCaseView } from './ports.ts';
 import type { Scenario } from './types.ts';
 export function runScenario(s: Scenario) {
   const store = new Store();
@@ -26,5 +27,11 @@ export function runScenario(s: Scenario) {
   if (JSON.stringify(actual.prohibitedActions) !== JSON.stringify(s.expected.prohibitedActions))
     failures.push('prohibited mismatch');
   if (actual.outboxCount !== s.expected.outboxCount) failures.push(`outbox ${actual.outboxCount}`);
-  return { id: s.id, pass: failures.length === 0, failures, actual, view };
+  return {
+    id: s.id,
+    pass: failures.length === 0,
+    failures,
+    actual,
+    view: view as ExistingCaseView,
+  };
 }

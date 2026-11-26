@@ -85,6 +85,8 @@ export type RecoveryCase = {
   contactCount: number;
   lastContactAt?: string;
   latestEventId: string;
+  /** Increments each time a new failure reopens a previously recovered case. */
+  episode?: number;
   failure?: NormalizedFailure;
 };
 export type Decision = {
@@ -118,6 +120,8 @@ export type AuditEvent = {
     | 'DUPLICATE_IGNORED'
     | 'PROJECTION_UPDATED'
     | 'STALE_EVENT_IGNORED'
+    | 'ROUTINE_EVENT_IGNORED'
+    | 'EPISODE_OPENED'
     | 'DECISION_RECORDED'
     | 'OUTBOX_ENQUEUED'
     | 'OUTCOME_RECORDED'

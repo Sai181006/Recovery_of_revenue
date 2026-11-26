@@ -8,7 +8,7 @@ import {
   repositoryDelivery,
   type Clock,
   type DeliveryExecutor,
-  type ExistingCaseView,
+  type CaseView,
   type RecoveryRepository,
   type Telemetry,
 } from './ports.ts';
@@ -29,6 +29,9 @@ const rank: Record<string, number> = {
   active: 4,
   cancelled: 5,
 };
+const CLOSED = new Set<CaseState>(['RECOVERED', 'CLOSED_CANCELLED']);
+/** Subscription states that indicate a failure (or unverifiable input) worth a case. */
+const OPENS_CASE = new Set<string>(['pending', 'halted', 'unknown']);
 const hash = (s: string) => createHash('sha256').update(s).digest('hex').slice(0, 20);
 export class Pipeline {
   readonly store: RecoveryRepository;
@@ -52,28 +55,45 @@ export class Pipeline {
     this.delivery = delivery;
     this.telemetry = telemetry;
   }
-  process(e: RecoveryEvent, at?: string): ExistingCaseView {
+  /**
+   * Processes one event atomically. Returns the case view; `case` is undefined
+   * when the event was routine (e.g. a normal monthly charge with no open failure).
+   */
+  process(e: RecoveryEvent, at?: string): CaseView {
     return this.store.transaction(() => this.processInTransaction(e, at));
   }
-  private processInTransaction(e: RecoveryEvent, at?: string) {
+  private processInTransaction(e: RecoveryEvent, at?: string): CaseView {
     const now = at ?? this.clock?.now() ?? e.receivedAt;
     const caseId = `${e.merchantId}:${e.subscriptionId}`;
     this.addAudit(caseId, e, 'EVENT_RECEIVED', {});
     if (!this.store.ingest(e)) {
       this.addAudit(caseId, e, 'DUPLICATE_IGNORED', {});
       this.telemetry.record('event.duplicate', { eventId: e.eventId, caseId });
-      return this.existingView(caseId);
+      return this.store.view(caseId);
     }
     const old = this.store.getCase(caseId);
     const nextSub = this.subState(e);
-    const stale = Boolean(old && new Date(e.occurredAt) < new Date(old.stateOccurredAt));
-    let c: RecoveryCase;
-    if (
+    const hasOpenCase = old !== undefined && !CLOSED.has(old.state);
+    // Only failures open a case. A charge, resume, pause or cancel with nothing
+    // open is normal subscription traffic, not a recovery, and is never credited.
+    if (!hasOpenCase && !OPENS_CASE.has(nextSub)) {
+      this.addAudit(caseId, e, 'ROUTINE_EVENT_IGNORED', { incoming: nextSub });
+      this.telemetry.record('event.routine', { eventId: e.eventId, caseId });
+      return this.store.view(caseId);
+    }
+    const newer = !old || new Date(e.occurredAt) > new Date(old.stateOccurredAt);
+    // A strictly newer failure after a recovery is a new billing-cycle failure:
+    // it opens a fresh episode instead of being discarded as a regression.
+    const reopening = old?.state === 'RECOVERED' && newer && OPENS_CASE.has(nextSub);
+    const stale = Boolean(
       old &&
-      (stale ||
+      !reopening &&
+      (new Date(e.occurredAt) < new Date(old.stateOccurredAt) ||
         (rank[nextSub] ?? 0) < (rank[old.subscriptionState] ?? 0) ||
-        (old.state === 'SUPPRESSED' && !['active', 'cancelled'].includes(nextSub)))
-    ) {
+        (old.state === 'SUPPRESSED' && !['active', 'cancelled'].includes(nextSub))),
+    );
+    let c: RecoveryCase;
+    if (old && stale) {
       c = old;
       this.addAudit(caseId, e, 'STALE_EVENT_IGNORED', {
         incoming: nextSub,
@@ -81,8 +101,14 @@ export class Pipeline {
         preservedSuppression: old.state === 'SUPPRESSED',
       });
     } else {
-      const failure = e.rawFailure ? normalizeFailure(e.rawFailure) : old?.failure;
+      const failure = e.rawFailure
+        ? normalizeFailure(e.rawFailure)
+        : reopening
+          ? undefined
+          : old?.failure;
       const state = this.caseState(e, nextSub, failure?.contradictory ?? false);
+      const episode = (old?.episode ?? 1) + (reopening ? 1 : 0);
+      if (reopening) this.addAudit(caseId, e, 'EPISODE_OPENED', { episode });
       c = {
         id: caseId,
         merchantId: e.merchantId,
@@ -91,18 +117,23 @@ export class Pipeline {
         state,
         subscriptionState: nextSub,
         stateOccurredAt: e.occurredAt,
-        amountMinor: e.amountMinor,
+        amountMinor: e.amountMinor || old?.amountMinor || 0,
         currency: e.currency,
-        contactCount: old?.contactCount ?? 0,
+        // Contact caps are per episode; lastContactAt is kept so the cooldown still applies.
+        contactCount: reopening ? 0 : (old?.contactCount ?? 0),
         latestEventId: e.eventId,
+        episode,
         ...(old?.lastContactAt ? { lastContactAt: old.lastContactAt } : {}),
         ...(failure ? { failure } : {}),
       };
       this.store.saveCase(c);
       this.addAudit(caseId, e, 'PROJECTION_UPDATED', { state });
     }
-    const result = evaluate(c, e, this.policy, now),
-      fallback = selectAction(result.eligible),
+    let result = evaluate(c, e, this.policy, now);
+    // A stale event changes nothing, so it must not trigger new outward actions.
+    if (stale && result.eligible.some((a) => a !== 'WAIT' && a !== 'SUPPRESS'))
+      result = { eligible: ['WAIT'], reasons: ['STALE_EVENT_NO_NEW_ACTION'] };
+    const fallback = selectAction(result.eligible),
       advisory = advise(c, result.eligible, this.policy, fallback, this.advisor),
       selected = advisory.selectedAction;
     const d: Decision = {
@@ -156,14 +187,16 @@ export class Pipeline {
           : selected === 'SUPPRESS'
             ? 'SUPPRESSED'
             : 'OPEN';
+    // Credit an amount only on the event that moves an open case to RECOVERED.
+    const recoveredNow = status === 'RECOVERED' && !stale && old?.state !== 'RECOVERED';
     const o: Outcome = {
       id: `outcome_${hash(e.eventId)}`,
       caseId,
       eventId: e.eventId,
       status,
       occurredAt: now,
-      attribution: status === 'RECOVERED' ? 'platform_or_spontaneous' : 'none',
-      ...(status === 'RECOVERED' ? { recoveredAmountMinor: e.amountMinor } : {}),
+      attribution: recoveredNow ? 'platform_or_spontaneous' : 'none',
+      ...(recoveredNow ? { recoveredAmountMinor: c.amountMinor } : {}),
     };
     this.store.outcome(o);
     this.addAudit(caseId, e, 'OUTCOME_RECORDED', { status });
@@ -172,7 +205,7 @@ export class Pipeline {
       caseId,
       selectedAction: selected,
     });
-    return this.existingView(caseId);
+    return this.store.view(caseId);
   }
   private subState(e: RecoveryEvent) {
     return (
@@ -215,10 +248,5 @@ export class Pipeline {
       kind,
       detail,
     });
-  }
-  private existingView(caseId: string): ExistingCaseView {
-    const view = this.store.view(caseId);
-    if (!view.case || !view.decisions[0]) throw new Error('processed case invariant failed');
-    return view as ExistingCaseView;
   }
 }

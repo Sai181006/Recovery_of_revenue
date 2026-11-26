@@ -65,6 +65,12 @@ test('duplicate signed delivery creates one decision and at most one outbox item
 });
 test('out-of-order pending cannot regress a confirmed charged event', () => {
   const { store, processor } = setup();
+  const failure = signed(pendingPayload);
+  processor.process(
+    failure.raw,
+    { 'x-razorpay-event-id': 'rzp_evt_failure', 'x-razorpay-signature': failure.signature },
+    '2026-08-23T12:00:00.000Z',
+  );
   const charged = signed(chargedPayload);
   processor.process(
     charged.raw,

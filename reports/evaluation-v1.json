@@ -2,7 +2,7 @@
   "reportVersion": "evaluation-v1",
   "generatedAt": "2026-08-23T23:59:59.000Z",
   "dataset": "synthetic_phase_0_fixtures",
-  "fixtureSetHash": "51cd6110180ebc0303366335acaca081b4a311e6ea4b0edb3b91269d4e769ec7",
+  "fixtureSetHash": "0ef7b17631f67f20309db27637b604dd951f7782492bfc247274f471777e1b88",
   "outcomeRule": "Synthetic recovery is true only for the three customer-remediable golden fixtures when the selected customer-contact action is an acceptable label. This is not observed revenue or causal lift.",
   "releaseGate": {
     "passed": true,
@@ -65,7 +65,7 @@
           "contacts": 0,
           "syntheticRecovered": 0
         },
-        "RECOVERED|none|none": {
+        "RECOVERED|customer|fund_account": {
           "cases": 1,
           "contacts": 0,
           "syntheticRecovered": 0
@@ -128,7 +128,7 @@
           "contacts": 0,
           "syntheticRecovered": 0
         },
-        "RECOVERED|none|none": {
+        "RECOVERED|customer|fund_account": {
           "cases": 1,
           "contacts": 0,
           "syntheticRecovered": 0
@@ -191,7 +191,7 @@
           "contacts": 0,
           "syntheticRecovered": 0
         },
-        "RECOVERED|none|none": {
+        "RECOVERED|customer|fund_account": {
           "cases": 1,
           "contacts": 0,
           "syntheticRecovered": 0
@@ -480,8 +480,8 @@
       "scenarioId": "out-of-order-recovery",
       "strategy": "no_added_customer_contact",
       "caseState": "RECOVERED",
-      "failureOwnership": "none",
-      "failureRemedy": "none",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
       "eligibleActions": [
         "SUPPRESS"
       ],
@@ -494,8 +494,8 @@
         "ESCALATE_TO_MERCHANT"
       ],
       "outboxCount": 0,
-      "auditCount": 8,
-      "outcomeCount": 2,
+      "auditCount": 12,
+      "outcomeCount": 3,
       "syntheticRecovered": false,
       "violations": []
     },
@@ -802,8 +802,8 @@
       "scenarioId": "out-of-order-recovery",
       "strategy": "fixed_rule",
       "caseState": "RECOVERED",
-      "failureOwnership": "none",
-      "failureRemedy": "none",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
       "eligibleActions": [
         "SUPPRESS"
       ],
@@ -815,9 +815,9 @@
         "SURFACE_PAYMENT_UPDATE_LINK",
         "ESCALATE_TO_MERCHANT"
       ],
-      "outboxCount": 0,
-      "auditCount": 8,
-      "outcomeCount": 2,
+      "outboxCount": 1,
+      "auditCount": 13,
+      "outcomeCount": 3,
       "syntheticRecovered": false,
       "violations": []
     },
@@ -1124,8 +1124,8 @@
       "scenarioId": "out-of-order-recovery",
       "strategy": "bounded_advisor_simulation",
       "caseState": "RECOVERED",
-      "failureOwnership": "none",
-      "failureRemedy": "none",
+      "failureOwnership": "customer",
+      "failureRemedy": "fund_account",
       "eligibleActions": [
         "SUPPRESS"
       ],
@@ -1137,9 +1137,9 @@
         "SURFACE_PAYMENT_UPDATE_LINK",
         "ESCALATE_TO_MERCHANT"
       ],
-      "outboxCount": 0,
-      "auditCount": 8,
-      "outcomeCount": 2,
+      "outboxCount": 1,
+      "auditCount": 13,
+      "outcomeCount": 3,
       "syntheticRecovered": false,
       "violations": []
     },

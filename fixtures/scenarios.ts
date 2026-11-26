@@ -219,9 +219,16 @@ export const scenarios: Scenario[] = [
   },
   {
     id: 'out-of-order-recovery',
-    description: 'A stale pending event cannot regress a confirmed recovery.',
+    description:
+      'A failure is recovered; a stale pending event delivered late cannot regress the recovery.',
     now: '2026-08-23T12:00:00.000Z',
     events: [
+      {
+        ...base('evt_recovered_failure', 'subscription.pending', '2026-08-23T10:00:00.000Z'),
+        subscriptionId: 'sub_evt_recovered',
+        customerRef: 'customer_evt_recovered',
+        rawFailure: { source: 'customer', reason: 'insufficient_funds' },
+      },
       base('evt_recovered', 'subscription.charged', '2026-08-23T12:00:00.000Z'),
       {
         ...base('evt_stale', 'subscription.pending', '2026-08-23T11:00:00.000Z'),
@@ -231,7 +238,7 @@ export const scenarios: Scenario[] = [
         rawFailure: { source: 'customer', reason: 'insufficient_funds' },
       },
     ],
-    expected: expected('RECOVERED', ['SUPPRESS'], ['SUPPRESS'], 0),
+    expected: expected('RECOVERED', ['SUPPRESS'], ['SUPPRESS'], 1),
   },
   {
     id: 'missing-contact',

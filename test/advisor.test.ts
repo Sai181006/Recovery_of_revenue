@@ -37,7 +37,7 @@ const adapter = (rank: (input: AdvisorInput) => unknown): Advisor => ({
   rank,
 });
 const run = (advisor: Advisor) =>
-  new Pipeline(new Store(), defaultPolicy, advisor).process(event).decisions[0];
+  new Pipeline(new Store(), defaultPolicy, advisor).process(event).decisions[0]!;
 test('advisor receives only bounded redacted context and may choose only eligible action', () => {
   let seen: AdvisorInput | undefined;
   const decision = run(

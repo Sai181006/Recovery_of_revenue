@@ -115,8 +115,8 @@ test('application services use an in-memory repository and injected clock withou
     rawFailure: { source: 'customer', reason: 'insufficient_funds' },
   };
   const view = application.pipeline.process(event);
-  assert.equal(view.decisions[0].decidedAt, now);
-  assert.equal(view.case.state, 'OPEN_PENDING');
+  assert.equal(view.decisions[0]!.decidedAt, now);
+  assert.equal(view.case!.state, 'OPEN_PENDING');
   assert.equal(repository.counts().outbox, 1);
   application.close();
 });

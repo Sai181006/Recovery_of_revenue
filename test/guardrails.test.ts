@@ -68,7 +68,7 @@ test('per-case cap blocks contact after two prior touches', () => {
   pipeline.process(event('evt_cap_1', '2026-08-18T12:00:00.000Z'));
   pipeline.process(event('evt_cap_2', '2026-08-20T12:00:00.000Z'));
   const view = pipeline.process(event('evt_cap_3', '2026-08-22T12:00:00.000Z'));
-  assert.equal(view.case.contactCount, 2);
+  assert.equal(view.case!.contactCount, 2);
   assert.equal(view.decisions.at(-1)!.selectedAction, 'WAIT');
   assert.equal(view.outbox.length, 2);
 });
