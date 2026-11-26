@@ -8,7 +8,7 @@ import { pathToFileURL } from 'node:url';
 import { createApplication } from '../src/application.ts';
 import { formatConfigError, parseRuntimeConfig } from '../src/config.ts';
 import { AppError, toHttpError } from '../src/errors.ts';
-import { MemoryStore } from '../src/memory-store.ts';
+import { Store } from '../src/store.ts';
 import { createRuntime } from '../src/runtime.ts';
 import type { RecoveryEvent } from '../src/types.ts';
 
@@ -95,7 +95,7 @@ test('invalid configuration fails closed and diagnostics never contain secret va
 
 test('application services use an in-memory repository and injected clock without a port', () => {
   const now = '2026-08-24T10:15:30.000Z';
-  const repository = new MemoryStore();
+  const repository = new Store(':memory:');
   const application = createApplication({ repository, clock: { now: () => now } });
   const event: RecoveryEvent = {
     schemaVersion: '1.0',

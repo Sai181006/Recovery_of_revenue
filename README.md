@@ -18,12 +18,12 @@ Use `npm run demo:reset` to remove only the local `data/recovery.sqlite*` files 
 ## Phase 7 module boundaries
 
 - `src/application.ts` constructs application services from injected repository, clock, advisor, delivery/execution, and telemetry ports.
-- `src/ports.ts` defines the small operational boundaries; `src/store.ts` and `src/memory-store.ts` are SQLite and in-memory adapters.
+- `src/ports.ts` defines the small operational boundaries; `src/store.ts` is the SQLite adapter (tests use an in-memory SQLite database).
 - `src/http-app.ts` constructs HTTP behavior but never listens, seeds, or creates storage.
 - `src/config.ts`, `src/runtime.ts`, and `src/server.ts` validate configuration, create resources, listen, and close HTTP/SQLite gracefully.
 - `src/seeding.ts` and demo tools exclusively own synthetic fixture seeding.
 
-Importing application, HTTP, or server modules has no startup or seed side effects. Application tests use `MemoryStore` with an injected clock and no socket. Application/HTTP failures expose stable codes such as `BAD_REQUEST`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, and `INTERNAL_ERROR`; internal exception details are not returned.
+Importing application, HTTP, or server modules has no startup or seed side effects. Application tests use `new Store(':memory:')` with an injected clock and no socket. Application/HTTP failures expose stable codes such as `BAD_REQUEST`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, and `INTERNAL_ERROR`; internal exception details are not returned.
 
 ## Razorpay-shaped test webhook
 

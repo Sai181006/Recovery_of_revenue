@@ -20,7 +20,7 @@ demo/development entrypoint -> reset safe demo DB -> seedDemoFixtures -> listen
 production entrypoint       -> empty/existing DB, never seed             -> listen
 ```
 
-`src/ports.ts` defines a repository, clock, advisor, delivery/execution, and telemetry boundary. These exist because application behavior depends on them; presentation-only helpers remain concrete. `Store` is the local SQLite adapter. `MemoryStore` supports application tests without a port or filesystem database. The optional advisor remains provider neutral, and the delivery adapter remains simulated.
+`src/ports.ts` defines a repository, clock, advisor, delivery/execution, and telemetry boundary. These exist because application behavior depends on them; presentation-only helpers remain concrete. `Store` is the local SQLite adapter. Tests use the same adapter with an in-memory SQLite database (`new Store(':memory:')`), so there is only one repository implementation to keep correct. The optional advisor remains provider neutral, and the delivery adapter remains simulated.
 
 `createApplication` has no filesystem or network side effects. `createHttpApp` builds a Node HTTP server but does not bind it. Importing `application.ts`, `http-app.ts`, `api.ts`, or `server.ts` does not seed, create a directory/database, or listen. `createRuntime` explicitly owns resource creation, while process entrypoints own mode selection and signal handling.
 
