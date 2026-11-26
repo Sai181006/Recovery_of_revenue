@@ -1,5 +1,6 @@
 import { isAbsolute, resolve } from 'node:path';
 import { AppError } from './errors.ts';
+import type { WebhookContext } from './webhook.ts';
 
 export const RUNTIME_MODES = ['demo', 'development', 'production'] as const;
 export type RuntimeMode = (typeof RUNTIME_MODES)[number];
@@ -13,6 +14,7 @@ export type RuntimeConfig = {
   seedFixtures: boolean;
   webhookEnabled: boolean;
   webhookSecret: string;
+  webhookContext: WebhookContext;
   publicBaseUrl?: string | undefined;
   modelProvider?: string | undefined;
   modelName?: string | undefined;
@@ -60,6 +62,15 @@ export function parseRuntimeConfig(
     seedFixtures: mode !== 'production',
     webhookEnabled,
     webhookSecret,
+    // Merchant-level context for live webhooks. Both flags default to false, so
+    // customer contact fails closed unless the operator opts in (test mode only).
+    webhookContext: {
+      merchantId: present(environment.WEBHOOK_MERCHANT_ID) ?? 'merchant_demo',
+      consent: present(environment.WEBHOOK_ASSUME_CONSENT) === 'true',
+      suppressed: false,
+      contactAvailable: present(environment.WEBHOOK_ASSUME_CONTACT_ROUTE) === 'true',
+      trustedUpdateLinkAvailable: false,
+    },
     ...(present(environment.PUBLIC_BASE_URL)
       ? { publicBaseUrl: present(environment.PUBLIC_BASE_URL) }
       : {}),

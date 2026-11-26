@@ -5,7 +5,7 @@ import { defaultPolicy } from '../src/default-policy.ts';
 import { Pipeline } from '../src/pipeline.ts';
 import { Store } from '../src/store.ts';
 import { WebhookProcessor, redact } from '../src/webhook.ts';
-import { chargedPayload, pendingPayload } from '../fixtures/razorpay-test-events.ts';
+import { chargedPayload, haltedPayload, pendingPayload } from '../fixtures/razorpay-test-events.ts';
 const secret = 'local-test-secret-not-a-live-credential';
 const signed = (payload: unknown) => {
   const raw = Buffer.from(JSON.stringify(payload));
@@ -134,4 +134,41 @@ test('identical deliveries in the same millisecond get distinct receipts', () =>
   processor.process(x.raw, headers, at);
   assert.equal(processor.process(x.raw, headers, at).processingStatus, 'DUPLICATE');
   assert.equal(store.webhookReceipts().length, 2);
+});
+test('a halted subscription escalates to the merchant even without customer consent', () => {
+  const store = new Store();
+  const processor = new WebhookProcessor(store, new Pipeline(store, defaultPolicy), secret, {
+    merchantId: 'merchant_demo',
+    consent: false,
+    suppressed: false,
+    contactAvailable: false,
+    trustedUpdateLinkAvailable: false,
+  });
+  const x = signed(haltedPayload);
+  processor.process(x.raw, {
+    'x-razorpay-event-id': 'rzp_evt_halt_noconsent',
+    'x-razorpay-signature': x.signature,
+  });
+  const view = store.view('merchant_demo:sub_test_redacted_002');
+  assert.equal(view.decisions.at(-1)!.selectedAction, 'ESCALATE_TO_MERCHANT');
+  assert.equal(view.outbox.length, 1);
+});
+test('a pending failure without customer consent never selects customer contact', () => {
+  const store = new Store();
+  const processor = new WebhookProcessor(store, new Pipeline(store, defaultPolicy), secret, {
+    merchantId: 'merchant_demo',
+    consent: false,
+    suppressed: false,
+    contactAvailable: true,
+    trustedUpdateLinkAvailable: false,
+  });
+  const x = signed(pendingPayload);
+  processor.process(
+    x.raw,
+    { 'x-razorpay-event-id': 'rzp_evt_noconsent', 'x-razorpay-signature': x.signature },
+    '2026-08-23T12:00:00.000Z',
+  );
+  const view = store.view('merchant_demo:sub_test_redacted_001');
+  assert.deepEqual(view.decisions.at(-1)!.eligibleActions, ['SUPPRESS']);
+  assert.equal(view.outbox.length, 0);
 });

@@ -20,6 +20,7 @@ export function createRuntime(config: RuntimeConfig, dependencies: RuntimeDepend
     clock: dependencies.clock ?? systemClock,
     ...(dependencies.telemetry ? { telemetry: dependencies.telemetry } : {}),
     webhookSecret: config.webhookEnabled ? config.webhookSecret : '',
+    webhookContext: config.webhookContext,
   });
   if (config.seedFixtures) seedDemoFixtures(application);
   const server = createHttpApp({

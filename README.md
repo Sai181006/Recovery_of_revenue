@@ -29,7 +29,7 @@ Importing application, HTTP, or server modules has no startup or seed side effec
 
 Set `WEBHOOK_ENABLED=true` and `RAZORPAY_WEBHOOK_SECRET` locally, start the server, and configure the test-mode-shaped endpoint as `POST /webhooks/razorpay`. The handler verifies `X-Razorpay-Signature` against untouched bytes and uses `X-Razorpay-Event-Id` for deduplication. Every delivery gets a receipt, inspectable at `GET /webhook-receipts`: verified deliveries store a redacted payload before mapping; unsigned ones store only size and hash. Verified deliveries are acknowledged with 2xx even when unsupported (the status is in the body), and only a rolled-back processing failure returns 500 so Razorpay retries.
 
-The default server context has no customer consent or approved contact route, so customer contact fails closed. This repository contains no Razorpay credentials, API calls, or genuine captured account lifecycle. Never commit `.env` or a webhook secret.
+The default server context has no customer consent or approved contact route, so customer contact fails closed; merchant escalation (e.g. for a halted subscription) does not need customer consent. For Razorpay test mode only, `WEBHOOK_ASSUME_CONSENT=true` and `WEBHOOK_ASSUME_CONTACT_ROUTE=true` let contact decisions appear (delivery stays simulated). This repository contains no Razorpay credentials, API calls, or genuine captured account lifecycle. Never commit `.env` or a webhook secret.
 
 ## Constrained advisor and experience
 

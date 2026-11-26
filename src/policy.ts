@@ -31,8 +31,6 @@ export function evaluate(
   if (e.type === 'invalid' || e.identityConsistent === false || c.state === 'AMBIGUOUS')
     return { eligible: ['SUPPRESS'], reasons: ['FAIL_CLOSED_AMBIGUOUS_OR_INVALID'] };
   if (c.state === 'SUPPRESSED') return { eligible: ['SUPPRESS'], reasons: ['CASE_SUPPRESSED'] };
-  if (e.suppressed || !e.consent)
-    return { eligible: ['SUPPRESS'], reasons: ['SUPPRESSION_OR_NO_CONSENT'] };
   if (c.state === 'RECOVERED' || c.state === 'CLOSED_CANCELLED')
     return { eligible: ['SUPPRESS'], reasons: ['CASE_TERMINAL'] };
   if (c.failure?.ownership === 'unknown' || c.failure?.contradictory)
@@ -50,6 +48,10 @@ export function evaluate(
     new Date(e.retryAt) > new Date(now)
   )
     return { eligible: ['WAIT'], reasons: ['PLATFORM_RETRY_IMMINENT'] };
+  // Customer consent and opt-out gate customer contact only. Everything above is
+  // internal (merchant escalation, waiting), so it does not depend on them.
+  if (e.suppressed || !e.consent)
+    return { eligible: ['SUPPRESS'], reasons: ['SUPPRESSION_OR_NO_CONSENT'] };
   const blocked =
     !e.contactAvailable ||
     !p.channels.simulatedEmail ||

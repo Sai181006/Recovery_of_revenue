@@ -153,3 +153,21 @@ test('central HTTP error mapping exposes stable codes and hides internal details
   assert.equal(unknown.body.code, 'INTERNAL_ERROR');
   assert.doesNotMatch(JSON.stringify(unknown), /database path/);
 });
+
+test('webhook context fails closed by default and is configurable for test mode', () => {
+  const closed = parseRuntimeConfig({}, 'production').webhookContext;
+  assert.equal(closed.consent, false);
+  assert.equal(closed.contactAvailable, false);
+  const open = parseRuntimeConfig(
+    {
+      WEBHOOK_MERCHANT_ID: 'merchant_test',
+      WEBHOOK_ASSUME_CONSENT: 'true',
+      WEBHOOK_ASSUME_CONTACT_ROUTE: 'true',
+    },
+    'production',
+  ).webhookContext;
+  assert.deepEqual(
+    [open.merchantId, open.consent, open.contactAvailable, open.trustedUpdateLinkAvailable],
+    ['merchant_test', true, true, false],
+  );
+});
