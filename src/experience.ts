@@ -96,61 +96,71 @@ export class MerchantExperience {
     }));
   }
   suppress(caseId: string, role: MerchantRole, at = this.clock.now()) {
-    if (!['merchant_operator', 'merchant_admin'].includes(role))
-      throw new AppError('FORBIDDEN', 'forbidden');
-    const c = this.store.getCase(caseId);
-    if (!c) throw new AppError('NOT_FOUND', 'case not found');
-    if (c.state === 'RECOVERED' || c.state === 'CLOSED_CANCELLED')
-      throw new AppError('CONFLICT', 'case terminal');
-    if (c.state !== 'SUPPRESSED') this.store.saveCase({ ...c, state: 'SUPPRESSED' });
-    this.audit(caseId, c.latestEventId, at, 'CASE_SUPPRESSED', { role });
-    this.telemetry.record('case.suppressed', { caseId, role });
-    return this.store.view(caseId) as ExistingCaseView;
+    return this.store.transaction(() => {
+      if (!['merchant_operator', 'merchant_admin'].includes(role))
+        throw new AppError('FORBIDDEN', 'forbidden');
+      const c = this.store.getCase(caseId);
+      if (!c) throw new AppError('NOT_FOUND', 'case not found');
+      if (c.state === 'RECOVERED' || c.state === 'CLOSED_CANCELLED')
+        throw new AppError('CONFLICT', 'case terminal');
+      if (c.state !== 'SUPPRESSED') this.store.saveCase({ ...c, state: 'SUPPRESSED' });
+      this.audit(caseId, c.latestEventId, at, 'CASE_SUPPRESSED', { role });
+      this.telemetry.record('case.suppressed', { caseId, role });
+      return this.store.view(caseId) as ExistingCaseView;
+    });
   }
   override(caseId: string, action: Action, role: MerchantRole, at = this.clock.now()) {
-    if (role !== 'merchant_admin') throw new AppError('FORBIDDEN', 'forbidden');
-    const view = this.store.view(caseId);
-    if (!view.case) throw new AppError('NOT_FOUND', 'case not found');
-    if (['RECOVERED', 'CLOSED_CANCELLED', 'SUPPRESSED'].includes(view.case.state))
-      throw new AppError('CONFLICT', 'case terminal');
-    const latest = view.decisions.at(-1);
-    if (!latest?.eligibleActions.includes(action))
-      throw new AppError('CONFLICT', 'action not eligible');
-    const key = `override:${caseId}:${latest.id}:${action}`;
-    if (contactActions.includes(action)) {
-      const message = preview(action);
-      this.delivery.enqueue({
-        id: `out_${hash(key)}`,
-        key,
-        caseId,
+    return this.store.transaction(() => {
+      if (role !== 'merchant_admin') throw new AppError('FORBIDDEN', 'forbidden');
+      const view = this.store.view(caseId);
+      if (!view.case) throw new AppError('NOT_FOUND', 'case not found');
+      if (['RECOVERED', 'CLOSED_CANCELLED', 'SUPPRESSED'].includes(view.case.state))
+        throw new AppError('CONFLICT', 'case terminal');
+      const latest = view.decisions.at(-1);
+      if (!latest?.eligibleActions.includes(action))
+        throw new AppError('CONFLICT', 'action not eligible');
+      const key = `override:${caseId}:${latest.id}:${action}`;
+      if (contactActions.includes(action)) {
+        const message = preview(action);
+        this.delivery.enqueue({
+          id: `out_${hash(key)}`,
+          key,
+          caseId,
+          action,
+          payload: { simulated: true, message, override: true },
+        });
+      } else if (action === 'ESCALATE_TO_MERCHANT')
+        this.delivery.enqueue({
+          id: `out_${hash(key)}`,
+          key,
+          caseId,
+          action,
+          payload: { simulated: true, override: true },
+        });
+      this.audit(caseId, latest.eventId, at, 'OVERRIDE_RECORDED', {
+        role,
         action,
-        payload: { simulated: true, message, override: true },
+        dispatchKey: key,
       });
-    } else if (action === 'ESCALATE_TO_MERCHANT')
-      this.delivery.enqueue({
-        id: `out_${hash(key)}`,
-        key,
-        caseId,
-        action,
-        payload: { simulated: true, override: true },
-      });
-    this.audit(caseId, latest.eventId, at, 'OVERRIDE_RECORDED', { role, action, dispatchKey: key });
-    this.telemetry.record('case.overridden', { caseId, role, action });
-    return this.store.view(caseId) as ExistingCaseView;
+      this.telemetry.record('case.overridden', { caseId, role, action });
+      return this.store.view(caseId) as ExistingCaseView;
+    });
   }
   markDelivered(outboxId: string, role: MerchantRole, at = this.clock.now()) {
-    if (!['merchant_operator', 'merchant_admin'].includes(role))
-      throw new AppError('FORBIDDEN', 'forbidden');
-    const row = this.store.outboxItem(outboxId);
-    if (!row) throw new AppError('NOT_FOUND', 'outbox item not found');
-    this.store.markOutboxDelivered(outboxId);
-    this.audit(row.case_id, 'simulated_delivery', at, 'DELIVERY_UPDATED', {
-      outboxId,
-      status: 'SIMULATED_DELIVERED',
-      role,
+    return this.store.transaction(() => {
+      if (!['merchant_operator', 'merchant_admin'].includes(role))
+        throw new AppError('FORBIDDEN', 'forbidden');
+      const row = this.store.outboxItem(outboxId);
+      if (!row) throw new AppError('NOT_FOUND', 'outbox item not found');
+      this.store.markOutboxDelivered(outboxId);
+      this.audit(row.case_id, 'simulated_delivery', at, 'DELIVERY_UPDATED', {
+        outboxId,
+        status: 'SIMULATED_DELIVERED',
+        role,
+      });
+      this.telemetry.record('delivery.simulated', { outboxId, caseId: row.case_id });
+      return this.store.view(row.case_id) as ExistingCaseView;
     });
-    this.telemetry.record('delivery.simulated', { outboxId, caseId: row.case_id });
-    return this.store.view(row.case_id) as ExistingCaseView;
   }
   private audit(
     caseId: string,

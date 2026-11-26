@@ -33,6 +33,8 @@ export type WebhookReceipt = {
 };
 
 export interface RecoveryRepository {
+  /** Runs fn atomically: every write inside it commits together or not at all. */
+  transaction<T>(fn: () => T): T;
   ingest(event: RecoveryEvent): boolean;
   getCase(id: string): RecoveryCase | undefined;
   listCases(): RecoveryCase[];

@@ -9,18 +9,33 @@ export class Store implements RecoveryRepository {
       `PRAGMA foreign_keys=ON; CREATE TABLE IF NOT EXISTS webhook_receipts(seq INTEGER PRIMARY KEY AUTOINCREMENT,receipt_id TEXT UNIQUE NOT NULL,event_id TEXT NOT NULL,received_at TEXT NOT NULL,verification TEXT NOT NULL,processing_status TEXT NOT NULL,redacted_payload TEXT NOT NULL,error TEXT); CREATE TABLE IF NOT EXISTS inbox(seq INTEGER PRIMARY KEY AUTOINCREMENT,event_id TEXT NOT NULL,received_at TEXT NOT NULL,payload TEXT NOT NULL,duplicate INTEGER NOT NULL DEFAULT 0); CREATE UNIQUE INDEX IF NOT EXISTS one_original ON inbox(event_id) WHERE duplicate=0; CREATE TABLE IF NOT EXISTS cases(id TEXT PRIMARY KEY,data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS decisions(id TEXT PRIMARY KEY,event_id TEXT UNIQUE NOT NULL,case_id TEXT NOT NULL,data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,id TEXT UNIQUE NOT NULL,case_id TEXT NOT NULL,event_id TEXT NOT NULL,data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS outbox(id TEXT PRIMARY KEY,dispatch_key TEXT UNIQUE NOT NULL,case_id TEXT NOT NULL,action TEXT NOT NULL,status TEXT NOT NULL,payload TEXT NOT NULL); CREATE TABLE IF NOT EXISTS outcomes(id TEXT PRIMARY KEY,event_id TEXT UNIQUE NOT NULL,case_id TEXT NOT NULL,data TEXT NOT NULL);`,
     );
   }
-  ingest(e: RecoveryEvent) {
+  private depth = 0;
+  transaction<T>(fn: () => T): T {
+    // Nested calls join the outer transaction.
+    if (this.depth > 0) return fn();
+    this.db.exec('BEGIN IMMEDIATE');
+    this.depth++;
     try {
-      this.db
-        .prepare('INSERT INTO inbox(event_id,received_at,payload) VALUES(?,?,?)')
-        .run(e.eventId, e.receivedAt, JSON.stringify(e));
-      return true;
-    } catch {
-      this.db
-        .prepare('INSERT INTO inbox(event_id,received_at,payload,duplicate) VALUES(?,?,?,1)')
-        .run(e.eventId, e.receivedAt, JSON.stringify(e));
-      return false;
+      const result = fn();
+      this.db.exec('COMMIT');
+      return result;
+    } catch (error) {
+      this.db.exec('ROLLBACK');
+      throw error;
+    } finally {
+      this.depth--;
     }
+  }
+  ingest(e: RecoveryEvent) {
+    // Explicit lookup instead of catching the unique-index error, so a real
+    // database failure (busy, I/O) propagates instead of being counted as a duplicate.
+    const seen = this.db
+      .prepare('SELECT 1 FROM inbox WHERE event_id=? AND duplicate=0')
+      .get(e.eventId);
+    this.db
+      .prepare('INSERT INTO inbox(event_id,received_at,payload,duplicate) VALUES(?,?,?,?)')
+      .run(e.eventId, e.receivedAt, JSON.stringify(e), seen ? 1 : 0);
+    return !seen;
   }
   getCase(id: string) {
     const r = this.db.prepare('SELECT data FROM cases WHERE id=?').get(id) as

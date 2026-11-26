@@ -75,9 +75,11 @@ export function createHttpApp(options: HttpAppOptions) {
           res,
           result.processingStatus === 'REJECTED'
             ? 401
-            : ['PROCESSED', 'DUPLICATE'].includes(result.processingStatus)
-              ? 202
-              : 422,
+            : result.processingStatus === 'FAILED'
+              ? 500 // retryable: the transaction rolled back
+              : ['PROCESSED', 'DUPLICATE'].includes(result.processingStatus)
+                ? 202
+                : 422,
           result,
         );
         return;

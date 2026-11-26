@@ -52,7 +52,10 @@ export class Pipeline {
     this.delivery = delivery;
     this.telemetry = telemetry;
   }
-  process(e: RecoveryEvent, at?: string) {
+  process(e: RecoveryEvent, at?: string): ExistingCaseView {
+    return this.store.transaction(() => this.processInTransaction(e, at));
+  }
+  private processInTransaction(e: RecoveryEvent, at?: string) {
     const now = at ?? this.clock?.now() ?? e.receivedAt;
     const caseId = `${e.merchantId}:${e.subscriptionId}`;
     this.addAudit(caseId, e, 'EVENT_RECEIVED', {});

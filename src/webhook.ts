@@ -26,7 +26,8 @@ export type WebhookResult = {
     | 'REJECTED'
     | 'MALFORMED'
     | 'UNSUPPORTED'
-    | 'RECONCILIATION_REQUIRED';
+    | 'RECONCILIATION_REQUIRED'
+    | 'FAILED';
   caseId?: string;
   error?: string;
 };
@@ -197,19 +198,9 @@ export class WebhookProcessor {
         error: 'missing event id',
       };
     }
+    let event: RecoveryEvent;
     try {
-      const event = mapRazorpayEvent(parsed, eventId, receivedAt, this.context);
-      this.pipeline.process(event, receivedAt);
-      const status = this.store.isDuplicateReceipt(eventId) ? 'DUPLICATE' : 'PROCESSED';
-      this.store.updateWebhookReceipt(receiptId, status);
-      this.telemetry.record('webhook.processed', { eventId, status });
-      return {
-        receiptId,
-        eventId,
-        verification: 'VERIFIED',
-        processingStatus: status,
-        caseId: `${event.merchantId}:${event.subscriptionId}`,
-      };
+      event = mapRazorpayEvent(parsed, eventId, receivedAt, this.context);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'mapping failed';
       const status =
@@ -227,5 +218,29 @@ export class WebhookProcessor {
         error: message,
       };
     }
+    try {
+      // Atomic: on failure nothing from this event is kept, so a redelivery reprocesses it.
+      this.pipeline.process(event, receivedAt);
+    } catch {
+      this.store.updateWebhookReceipt(receiptId, 'FAILED', 'processing failed; safe to retry');
+      this.telemetry.record('webhook.failed', { eventId });
+      return {
+        receiptId,
+        eventId,
+        verification: 'VERIFIED',
+        processingStatus: 'FAILED',
+        error: 'processing failed; safe to retry',
+      };
+    }
+    const status = this.store.isDuplicateReceipt(eventId) ? 'DUPLICATE' : 'PROCESSED';
+    this.store.updateWebhookReceipt(receiptId, status);
+    this.telemetry.record('webhook.processed', { eventId, status });
+    return {
+      receiptId,
+      eventId,
+      verification: 'VERIFIED',
+      processingStatus: status,
+      caseId: `${event.merchantId}:${event.subscriptionId}`,
+    };
   }
 }
