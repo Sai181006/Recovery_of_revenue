@@ -7,9 +7,9 @@ import { Pipeline } from './pipeline.ts';
 import { Store } from './store.ts';
 import type { Action, Scenario } from './types.ts';
 type Strategy = 'no_added_customer_contact' | 'fixed_rule' | 'bounded_advisor_simulation';
-type Trace = {
+export type Trace = {
   scenarioId: string;
-  strategy: Strategy;
+  strategy: string;
   caseState: string;
   failureOwnership: string;
   failureRemedy: string;
@@ -80,9 +80,14 @@ function syntheticRecovery(s: Scenario, action: Action) {
     contact.has(action)
   );
 }
-function trace(s: Scenario, strategy: Strategy): Trace {
+/** Runs one scenario with the given advisor (undefined = fixed rules) and checks the release-gate rules. */
+export function trace(
+  s: Scenario,
+  strategy: string,
+  advisor: Advisor | undefined = advisorFor(strategy as Strategy),
+): Trace {
   const store = new Store();
-  const pipeline = new Pipeline(store, defaultPolicy, advisorFor(strategy));
+  const pipeline = new Pipeline(store, defaultPolicy, advisor);
   let view: ReturnType<Pipeline['process']> | undefined;
   for (const event of s.events) view = pipeline.process(event, s.now);
   if (!view?.case) throw new Error(`${s.id}: missing case`);
@@ -124,7 +129,7 @@ function trace(s: Scenario, strategy: Strategy): Trace {
     violations,
   };
 }
-function summarize(traces: Trace[]) {
+export function summarize(traces: Trace[]) {
   const actionMix = Object.fromEntries(
     [
       'WAIT',
