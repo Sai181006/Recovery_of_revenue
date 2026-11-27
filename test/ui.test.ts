@@ -28,3 +28,8 @@ test('dashboard is responsive and has no remote asset dependency', () => {
   assert.doesNotMatch(css, /https?:\/\//);
   assert.doesNotMatch(html, /https?:\/\//);
 });
+
+test('read-only deployments hide merchant controls in the dashboard', () => {
+  assert.match(script, /state\.health\?\.readOnly/);
+  assert.match(script, /Read-only demo: merchant controls are disabled/);
+});

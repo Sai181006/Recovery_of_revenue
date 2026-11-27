@@ -32,6 +32,8 @@ export function createRuntime(config: RuntimeConfig, dependencies: RuntimeDepend
       protectData: config.mode === 'production',
     },
     readinessConfig: {
+      mode: config.mode,
+      readOnly: config.readOnly,
       webhookSecret: config.webhookEnabled ? config.webhookSecret : '',
       publicBaseUrl: config.publicBaseUrl,
       modelProvider: config.modelProvider,

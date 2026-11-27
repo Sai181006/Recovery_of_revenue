@@ -4,6 +4,8 @@ export type ReadinessConfig = {
   modelProvider?: string | undefined;
   modelName?: string | undefined;
   modelApiKey?: string | undefined;
+  mode?: string | undefined;
+  readOnly?: boolean | undefined;
 };
 export function readiness(config: ReadinessConfig) {
   const webhookConfigured = Boolean(config.webhookSecret);
@@ -25,6 +27,8 @@ export function readiness(config: ReadinessConfig) {
     phase: 'phase-6-credential-independent',
     fixtureDemoReady: true,
     integratedDemoReady: false,
+    mode: config.mode ?? 'unknown',
+    readOnly: config.readOnly ?? false,
     integrations: {
       razorpayWebhook: webhookConfigured,
       publicHttpsEndpoint: publicHttps,

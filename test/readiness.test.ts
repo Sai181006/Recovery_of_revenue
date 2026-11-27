@@ -24,3 +24,10 @@ test('configured values improve diagnostics but genuine lifecycle remains an exp
     'genuine Razorpay test lifecycle not yet captured',
   ]);
 });
+
+test('health reports mode and read-only state for the dashboard', () => {
+  const health = readiness({ mode: 'demo', readOnly: true });
+  assert.equal(health.mode, 'demo');
+  assert.equal(health.readOnly, true);
+  assert.equal(readiness({}).readOnly, false);
+});
