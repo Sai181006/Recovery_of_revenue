@@ -8,7 +8,7 @@
 When a recurring Razorpay payment fails, Relay decides the next step — wait, remind the customer, ask them to update their payment method, or escalate to the merchant — and records why.
 It verifies each webhook's HMAC signature, ignores duplicate and out-of-order events, and processes every event in a single SQLite transaction.
 Every action comes from fixed, auditable rules (quiet hours, cooldowns, contact caps, consent); unknown or contradictory input fails closed.
-An optional advisor port may only choose among actions the rules already allow; no live model is connected.
+An optional advisor may only choose among actions the rules already allow. A Claude adapter exists for offline evaluation, but live webhook decisions use the fixed rules and no live evaluation has been run yet.
 Messaging, payment links and authentication are simulated, and all demo data is synthetic. It is a portfolio project, not a production service.
 
 ![Relay dashboard overview in seeded demo mode](docs/images/dashboard-overview.png)
@@ -67,13 +67,14 @@ flowchart LR
 
 ## What is tested
 
-| Command                   | What it checks                                                                                                                                        |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run verify`          | Prettier, ESLint + a safety lint, strict TypeScript, all tests, 14 scenarios, evaluation release gate (also runs in CI)                               |
-| `npm test`                | Unit, HTTP-route, webhook, atomicity and projection tests. Prints the current count; all use synthetic fixtures except replay of real captures        |
-| `npm run scenarios`       | 14 hand-written end-to-end scenarios (insufficient funds, expired card, halted, duplicate, out-of-order, quiet hours, opt-out, ...)                   |
-| `npm run evaluate`        | Compares no-contact, fixed-rule and simulated-advisor strategies on the same 14 synthetic scenarios; writes `reports/evaluation-v1.json`              |
-| `npm run captured:report` | Lists real Razorpay **test-mode** captures and replays them. Captured so far: **none** — see [docs/RAZORPAY_TEST_MODE.md](docs/RAZORPAY_TEST_MODE.md) |
+| Command                   | What it checks                                                                                                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run verify`          | Prettier, ESLint + a safety lint, strict TypeScript, all tests, 14 scenarios, evaluation release gate (also runs in CI)                                                                           |
+| `npm test`                | Unit, HTTP-route, webhook, atomicity and projection tests. Prints the current count; all use synthetic fixtures except replay of real captures                                                    |
+| `npm run scenarios`       | 14 hand-written end-to-end scenarios (insufficient funds, expired card, halted, duplicate, out-of-order, quiet hours, opt-out, ...)                                                               |
+| `npm run evaluate`        | Compares no-contact, fixed-rule and simulated-advisor strategies on the same 14 synthetic scenarios; writes `reports/evaluation-v1.json`                                                          |
+| `npm run evaluate:live`   | Runs the Claude advisor on the same 14 synthetic scenarios next to the fixed rules; prints decision sources and rejected outputs. Needs an Anthropic API key and costs API usage; **not run yet** |
+| `npm run captured:report` | Lists real Razorpay **test-mode** captures and replays them. Captured so far: **none** — see [docs/RAZORPAY_TEST_MODE.md](docs/RAZORPAY_TEST_MODE.md)                                             |
 
 "Synthetic recoveries" in the evaluation are a declared fixture label, not observed revenue, lift or causal evidence.
 
@@ -82,7 +83,7 @@ flowchart LR
 - No real customers, no production deployment, no real money processed.
 - Messaging and payment links are simulated; nothing is sent.
 - No authentication: roles come from a header. Protection is limited to `READ_ONLY` and one shared `ADMIN_TOKEN`.
-- No live LLM; all decisions come from fixed rules.
+- Live webhook decisions come from fixed rules. The Claude advisor adapter is tested only against a mocked provider; `npm run evaluate:live` (needs your API key, billed) has not been run.
 - Real Razorpay test-mode capture tooling exists, but no events have been captured yet.
 - Single process, local SQLite, no scheduler (a "wait" decision is never revisited).
 
@@ -116,6 +117,7 @@ Full list: [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
 - `src/webhook.ts` signature verification, redaction, Razorpay event mapping
 - `src/pipeline.ts` dedup, projection, decision, outbox, outcome (one transaction)
 - `src/policy.ts` eligibility rules; `src/advisor.ts` bounded advisor contract and validation
+- `src/adapters/claude-advisor.ts` Claude API adapter (bounded input, JSON parse only; validation stays in `advisor.ts`)
 - `src/store.ts` SQLite repository; `src/http-app.ts` routes and access checks
 - `src/config.ts`, `src/runtime.ts`, `src/server.ts` configuration, startup, graceful shutdown
 - `fixtures/synthetic/` hand-written data; `fixtures/captured/` real test-mode captures (empty so far)

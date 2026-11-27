@@ -35,8 +35,12 @@ processed no real money.
 - **Customer consent:** not modelled per customer. Live webhooks use one merchant-level
   setting that defaults to "no consent", so customer contact is never eligible unless the
   operator sets `WEBHOOK_ASSUME_CONSENT=true` (intended for test mode only).
-- **Live model:** no LLM is wired in. The advisor port is exercised by deterministic
-  simulations; every decision comes from fixed rules.
+- **Live model:** `src/adapters/claude-advisor.ts` calls the Claude API behind the advisor
+  port, with the same strict validation, deterministic eligible set and fixed-rule fallback.
+  It is used only by `npm run evaluate:live`; live webhook decisions still use fixed rules
+  (the port is synchronous). Its tests use a mocked provider. **The live evaluation has not
+  been run** (it needs the owner's API key and is billed), so there is no evidence yet that
+  the model is better, or worse, than the fixed rules.
 - **Event coverage:** `subscription.pending/halted/charged/cancelled/paused/resumed` are mapped.
   `payment.failed` and `subscription.activated` are acknowledged and logged as unsupported.
   Whether real `subscription.pending` payloads carry the failure reason is unverified until a

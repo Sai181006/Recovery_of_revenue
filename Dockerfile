@@ -1,5 +1,6 @@
 # Runs the app with Node's built-in type stripping, HTTP server and SQLite.
-# There are no runtime npm dependencies, so no `npm install` happens in the image.
+# The server needs no npm packages, so no `npm install` happens in the image.
+# (@anthropic-ai/sdk is used only by the optional offline `npm run evaluate:live`.)
 FROM node:24.13.1-bookworm-slim
 
 ENV NODE_ENV=production \
