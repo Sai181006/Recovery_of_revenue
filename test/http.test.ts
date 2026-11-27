@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import type { AddressInfo } from 'node:net';
 import test from 'node:test';
-import { pendingPayload } from '../fixtures/razorpay-test-events.ts';
+import { pendingPayload } from '../fixtures/synthetic/razorpay-test-events.ts';
 import { createApplication } from '../src/application.ts';
 import { createHttpApp, type AccessConfig } from '../src/http-app.ts';
 import { seedDemoFixtures } from '../src/seeding.ts';

@@ -1,4 +1,4 @@
-import { scenarios } from '../fixtures/scenarios.ts';
+import { scenarios } from '../fixtures/synthetic/scenarios.ts';
 import type { RevenueRecoveryApplication } from './application.ts';
 
 export function seedDemoFixtures(application: RevenueRecoveryApplication) {

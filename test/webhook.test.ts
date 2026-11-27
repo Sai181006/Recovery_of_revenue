@@ -5,7 +5,11 @@ import { defaultPolicy } from '../src/default-policy.ts';
 import { Pipeline } from '../src/pipeline.ts';
 import { Store } from '../src/store.ts';
 import { WebhookProcessor, redact } from '../src/webhook.ts';
-import { chargedPayload, haltedPayload, pendingPayload } from '../fixtures/razorpay-test-events.ts';
+import {
+  chargedPayload,
+  haltedPayload,
+  pendingPayload,
+} from '../fixtures/synthetic/razorpay-test-events.ts';
 const secret = 'local-test-secret-not-a-live-credential';
 const signed = (payload: unknown) => {
   const raw = Buffer.from(JSON.stringify(payload));

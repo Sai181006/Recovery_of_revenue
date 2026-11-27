@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { scenarios } from '../fixtures/scenarios.ts';
+import { scenarios } from '../fixtures/synthetic/scenarios.ts';
 import type { Advisor, AdvisorInput } from './advisor.ts';
 import { defaultPolicy } from './default-policy.ts';
 import { Pipeline } from './pipeline.ts';

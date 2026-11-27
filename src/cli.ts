@@ -1,4 +1,4 @@
-import { scenarios } from '../fixtures/scenarios.ts';
+import { scenarios } from '../fixtures/synthetic/scenarios.ts';
 import { writeReport } from './evaluation.ts';
 import { runScenario } from './scenario-runner.ts';
 if (process.argv[2] === 'scenarios') {

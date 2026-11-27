@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import test from 'node:test';
-import { pendingPayload } from '../fixtures/razorpay-test-events.ts';
+import { pendingPayload } from '../fixtures/synthetic/razorpay-test-events.ts';
 import { defaultPolicy } from '../src/default-policy.ts';
 import { Pipeline } from '../src/pipeline.ts';
 import { Store } from '../src/store.ts';

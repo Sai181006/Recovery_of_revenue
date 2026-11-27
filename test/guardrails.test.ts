@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { scenarios } from '../fixtures/scenarios.ts';
+import { scenarios } from '../fixtures/synthetic/scenarios.ts';
 import { runScenario } from '../src/scenario-runner.ts';
 import { defaultPolicy } from '../src/default-policy.ts';
 import { Pipeline } from '../src/pipeline.ts';

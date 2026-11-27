@@ -1,4 +1,4 @@
-import type { RecoveryEvent, Scenario } from '../src/types.ts';
+import type { RecoveryEvent, Scenario } from '../../src/types.ts';
 const base = (
   id: string,
   type: RecoveryEvent['type'],
