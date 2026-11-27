@@ -63,7 +63,7 @@ flowchart LR
 - **Episodes:** a failure after a recovery (next billing cycle) opens a new episode with a fresh contact cap. A normal monthly `subscription.charged` with nothing open is ignored, so routine revenue is never counted as "recovered".
 - **Stale events** (older than the current state) are audited but cannot trigger new actions.
 - **Consent** gates customer contact only; merchant escalation (e.g. a halted subscription) does not need it.
-- More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/SCHEMAS.md](docs/SCHEMAS.md), [docs/04_DECISIONS.md](docs/04_DECISIONS.md).
+- More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/SCHEMAS.md](docs/SCHEMAS.md).
 
 ## What is tested
 
