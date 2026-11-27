@@ -14,6 +14,8 @@
     "evaluate": "node --experimental-strip-types src/cli.ts evaluate",
     "demo:reset": "node --experimental-strip-types tools/demo.ts reset",
     "demo:seed": "node --experimental-strip-types tools/demo.ts seed",
+    "capture:webhooks": "node --env-file-if-exists=.env --experimental-strip-types tools/capture-webhooks.ts",
+    "captured:report": "node --experimental-strip-types tools/captured-report.ts",
     "test": "node --experimental-strip-types --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "lint:safety": "node tools/check.mjs lint",
