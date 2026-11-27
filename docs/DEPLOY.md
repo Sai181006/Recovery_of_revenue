@@ -23,7 +23,7 @@ read-only rather than "protected".
 
 These need your own GitHub and Render logins.
 
-1. Merge the PRs up to and including this one into `main` (or pick this branch in step 4).
+1. Make sure the latest code is on `main` (Render deploys from it).
 2. Sign in at <https://dashboard.render.com> with GitHub (free plan; Render may ask for
    account verification).
 3. Click **New → Blueprint**, then connect the `Sai181006/Recovery_of_revenue` repository
