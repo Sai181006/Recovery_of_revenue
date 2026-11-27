@@ -1,0 +1,18 @@
+# Render Blueprint for the public demo: seeded synthetic data, read-only.
+# Free web services have no persistent disk; the demo reseeds on every boot,
+# which is what we want. See docs/DEPLOY.md for the dashboard steps.
+services:
+  - type: web
+    name: revenue-recovery-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: APP_MODE
+        value: demo # seeds the 14 synthetic fixture scenarios
+      - key: READ_ONLY
+        value: 'true' # every merchant control returns 403
+      - key: WEBHOOK_ENABLED
+        value: 'false' # no Razorpay secret on the public demo

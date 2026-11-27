@@ -2,6 +2,9 @@
 
 [![CI](https://github.com/Sai181006/Recovery_of_revenue/actions/workflows/ci.yml/badge.svg)](https://github.com/Sai181006/Recovery_of_revenue/actions/workflows/ci.yml)
 
+> **Live demo:** not deployed yet — config is ready in `render.yaml`, steps in [docs/DEPLOY.md](docs/DEPLOY.md).
+> The demo shows **synthetic fixture data only** and is **read-only**. Merchant roles use an `X-Merchant-Role` header, which is **not real authentication**.
+
 Phase 0–7 credential-independent implementation for failed recurring Razorpay subscriptions. Phase 7 separates the deterministic application core, HTTP construction, SQLite, demo fixtures, configuration, and process lifecycle through explicit ports/adapters. The project still has no live Razorpay calls, live model, real messaging, production authentication, trusted real payment link, deployment, or production hosting.
 
 ## Run with Docker
@@ -16,6 +19,7 @@ docker build -t revenue-recovery .
 docker run --rm -p 3000:3000 -v recovery-data:/data revenue-recovery
 
 # Seeded demo mode: resets and seeds the 14 synthetic fixture scenarios on every start.
+# (Add -e READ_ONLY=true to mirror the public demo.)
 # Use a separate volume so the demo never touches production data.
 docker run --rm -p 3000:3000 -v recovery-demo:/data revenue-recovery tools/demo-server.ts demo
 ```

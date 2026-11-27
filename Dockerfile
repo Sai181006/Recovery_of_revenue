@@ -25,6 +25,8 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 ENTRYPOINT ["node", "--experimental-strip-types", "--disable-warning=ExperimentalWarning"]
-# Default: production mode (never seeds synthetic data).
-# Seeded demo instead:  docker run ... revenue-recovery tools/demo-server.ts demo
-CMD ["src/server.ts", "production"]
+# Mode comes from APP_MODE and defaults to production (never seeds synthetic data).
+# APP_MODE=demo seeds the synthetic fixtures at boot (used by the hosted demo).
+# Local demo that also resets the DB on every start:
+#   docker run ... revenue-recovery tools/demo-server.ts demo
+CMD ["src/server.ts"]
