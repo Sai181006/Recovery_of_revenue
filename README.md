@@ -1,78 +1,123 @@
-# Revenue Recovery — Phase 7 application boundaries
+# Relay — failed subscription payment recovery for Razorpay
 
 [![CI](https://github.com/Sai181006/Recovery_of_revenue/actions/workflows/ci.yml/badge.svg)](https://github.com/Sai181006/Recovery_of_revenue/actions/workflows/ci.yml)
 
 > **Live demo:** not deployed yet — config is ready in `render.yaml`, steps in [docs/DEPLOY.md](docs/DEPLOY.md).
 > The demo shows **synthetic fixture data only** and is **read-only**. Merchant roles use an `X-Merchant-Role` header, which is **not real authentication**.
 
-Phase 0–7 credential-independent implementation for failed recurring Razorpay subscriptions. Phase 7 separates the deterministic application core, HTTP construction, SQLite, demo fixtures, configuration, and process lifecycle through explicit ports/adapters. The project still has no live Razorpay calls, live model, real messaging, production authentication, trusted real payment link, deployment, or production hosting.
+When a recurring Razorpay payment fails, Relay decides the next step — wait, remind the customer, ask them to update their payment method, or escalate to the merchant — and records why.
+It verifies each webhook's HMAC signature, ignores duplicate and out-of-order events, and processes every event in a single SQLite transaction.
+Every action comes from fixed, auditable rules (quiet hours, cooldowns, contact caps, consent); unknown or contradictory input fails closed.
+An optional advisor port may only choose among actions the rules already allow; no live model is connected.
+Messaging, payment links and authentication are simulated, and all demo data is synthetic. It is a portfolio project, not a production service.
 
-## Run with Docker
+![Relay dashboard overview in seeded demo mode](docs/images/dashboard-overview.png)
+_Dashboard in seeded demo mode. Every case, amount and "synthetic recovery" shown is hand-written fixture data._
 
-No local Node install needed. From a clean clone:
+## Quickstart
+
+Requires Node.js 24+.
+
+```sh
+git clone https://github.com/Sai181006/Recovery_of_revenue.git && cd Recovery_of_revenue
+npm install
+npm run dev
+```
+
+Open http://localhost:3000. `npm run dev` resets and seeds the 14 synthetic scenarios on every start.
+
+With Docker instead (no Node needed):
 
 ```sh
 docker build -t revenue-recovery .
 
-# Production mode: starts empty, never seeds synthetic data; SQLite persists in the named volume.
-# Case data and controls need ADMIN_TOKEN (see below), so /cases returns 401 without it.
-docker run --rm -p 3000:3000 -v recovery-data:/data revenue-recovery
-
-# Seeded demo mode: resets and seeds the 14 synthetic fixture scenarios on every start.
-# (Add -e READ_ONLY=true to mirror the public demo.)
-# Use a separate volume so the demo never touches production data.
+# Seeded demo (synthetic data, reset on every start). Add -e READ_ONLY=true to mirror the public demo.
 docker run --rm -p 3000:3000 -v recovery-demo:/data revenue-recovery tools/demo-server.ts demo
+
+# Production mode: starts empty and never seeds synthetic data; SQLite persists in the volume.
+# /cases, /webhook-receipts and controls need -e ADMIN_TOKEN=... (sent as "Authorization: Bearer ...").
+docker run --rm -p 3000:3000 -v recovery-data:/data revenue-recovery
 ```
 
-Then open http://localhost:3000. Pass settings with `-e`, e.g. `-e ADMIN_TOKEN=...` or `-e READ_ONLY=true`; never bake secrets into the image. CI builds the image and smoke-tests both commands on every push.
+CI builds this image and smoke-tests both commands on every push.
 
-## Requirements and setup
+## How it works
 
-- Node.js 24 or newer
-- `npm install`
+```mermaid
+flowchart LR
+  RZ["Razorpay webhook"] -->|"raw bytes + X-Razorpay-Signature"| V{"HMAC-SHA256 valid?"}
+  V -->|no| BAD["Receipt: size + hash only, HTTP 401"]
+  V -->|yes| RC["Redacted receipt stored"]
+  RC --> MAP{"Supported event?"}
+  MAP -->|no| ACK["Logged, HTTP 200"]
+  MAP -->|yes| TX
+  subgraph TX ["One SQLite transaction (rolls back on any error, HTTP 500, Razorpay retries)"]
+    D["Dedup by event id"] --> P["Monotonic projection with failure episodes"]
+    P --> POL["Deterministic policy: eligible actions"]
+    POL --> SEL["Fixed rules, or bounded advisor choosing within the eligible set"]
+    SEL --> OUT["Simulated outbox + audit + outcome"]
+  end
+  TX --> UI["JSON API + dashboard"]
+```
 
-For the deterministic merchant experience, run `npm run dev`, then open `http://localhost:3000`. It resets and seeds the fixture database before listening. `npm run demo` first executes the complete release gate and then starts the same seeded experience in explicit `demo` mode. The dashboard retains overview metrics, a searchable queue, case evidence and decisions, bounded controls, previews, outcomes, audit, and matched evaluation.
+- **Episodes:** a failure after a recovery (next billing cycle) opens a new episode with a fresh contact cap. A normal monthly `subscription.charged` with nothing open is ignored, so routine revenue is never counted as "recovered".
+- **Stale events** (older than the current state) are audited but cannot trigger new actions.
+- **Consent** gates customer contact only; merchant escalation (e.g. a halted subscription) does not need it.
+- More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/SCHEMAS.md](docs/SCHEMAS.md), [docs/04_DECISIONS.md](docs/04_DECISIONS.md).
 
-`npm start` is intentionally different: it launches explicit `production` mode and never seeds synthetic cases. On a clean data path, `/cases` is empty. “Production-style” describes the boot boundary only; it does not claim production infrastructure or readiness.
+## What is tested
 
-Copy `.env.example` to `.env` only to change `HOST`, `PORT`, `DATA_PATH`, or `PUBLIC_DIR`. `APP_MODE` is validated as `demo`, `development`, or `production`; npm commands pass their intended mode explicitly. `WEBHOOK_ENABLED` defaults to `false` and conditionally requires `RAZORPAY_WEBHOOK_SECRET` only when enabled. Invalid configuration fails before listening and diagnostics name fields without printing values.
+| Command                   | What it checks                                                                                                                                        |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run verify`          | Prettier, ESLint + a safety lint, strict TypeScript, all tests, 14 scenarios, evaluation release gate (also runs in CI)                               |
+| `npm test`                | Unit, HTTP-route, webhook, atomicity and projection tests. Prints the current count; all use synthetic fixtures except replay of real captures        |
+| `npm run scenarios`       | 14 hand-written end-to-end scenarios (insufficient funds, expired card, halted, duplicate, out-of-order, quiet hours, opt-out, ...)                   |
+| `npm run evaluate`        | Compares no-contact, fixed-rule and simulated-advisor strategies on the same 14 synthetic scenarios; writes `reports/evaluation-v1.json`              |
+| `npm run captured:report` | Lists real Razorpay **test-mode** captures and replays them. Captured so far: **none** — see [docs/RAZORPAY_TEST_MODE.md](docs/RAZORPAY_TEST_MODE.md) |
 
-Use `npm run demo:reset` to remove only the local `data/recovery.sqlite*` files and `npm run demo:seed` to rebuild the deterministic demo without opening a port. Run `npm run release:check` for Prettier, ESLint plus safety lint, full semantic TypeScript checking, tests, scenarios, evaluation, artifact/secret/generated-data audits, and claim checks. JSON routes remain at `/cases`, `/evaluation`, `/health`, and `/webhook-receipts`.
+"Synthetic recoveries" in the evaluation are a declared fixture label, not observed revenue, lift or causal evidence.
 
-## Phase 7 module boundaries
+## Limitations
 
-- `src/application.ts` constructs application services from injected repository, clock, advisor, delivery/execution, and telemetry ports.
-- `src/ports.ts` defines the small operational boundaries; `src/store.ts` is the SQLite adapter (tests use an in-memory SQLite database).
-- `src/http-app.ts` constructs HTTP behavior but never listens, seeds, or creates storage.
-- `src/config.ts`, `src/runtime.ts`, and `src/server.ts` validate configuration, create resources, listen, and close HTTP/SQLite gracefully.
-- `src/seeding.ts` and demo tools exclusively own synthetic fixture seeding.
+- No real customers, no production deployment, no real money processed.
+- Messaging and payment links are simulated; nothing is sent.
+- No authentication: roles come from a header. Protection is limited to `READ_ONLY` and one shared `ADMIN_TOKEN`.
+- No live LLM; all decisions come from fixed rules.
+- Real Razorpay test-mode capture tooling exists, but no events have been captured yet.
+- Single process, local SQLite, no scheduler (a "wait" decision is never revisited).
 
-Importing application, HTTP, or server modules has no startup or seed side effects. Application tests use `new Store(':memory:')` with an injected clock and no socket. Application/HTTP failures expose stable codes such as `BAD_REQUEST`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, and `INTERNAL_ERROR`; internal exception details are not returned.
+Full list: [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
 
-## Razorpay-shaped test webhook
+## Reference
 
-Set `WEBHOOK_ENABLED=true` and `RAZORPAY_WEBHOOK_SECRET` locally, start the server, and configure the test-mode-shaped endpoint as `POST /webhooks/razorpay`. The handler verifies `X-Razorpay-Signature` against untouched bytes and uses `X-Razorpay-Event-Id` for deduplication. Every delivery gets a receipt, inspectable at `GET /webhook-receipts`: verified deliveries store a redacted payload before mapping; unsigned ones store only size and hash. Verified deliveries are acknowledged with 2xx even when unsupported (the status is in the body), and only a rolled-back processing failure returns 500 so Razorpay retries.
+### Modes and configuration
 
-The default server context has no customer consent or approved contact route, so customer contact fails closed; merchant escalation (e.g. for a halted subscription) does not need customer consent. For Razorpay test mode only, `WEBHOOK_ASSUME_CONSENT=true` and `WEBHOOK_ASSUME_CONTACT_ROUTE=true` let contact decisions appear (delivery stays simulated). This repository contains no Razorpay credentials, API calls, or genuine captured account lifecycle. Never commit `.env` or a webhook secret.
+`APP_MODE` is `demo`, `development` or `production` (default). Only demo/development seed synthetic data. Copy `.env.example` to `.env` to change settings; invalid configuration fails before listening, and error messages name fields without printing values.
 
-## Real Razorpay test-mode events
+| Variable                                                 | Default                | Purpose                                                                          |
+| -------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------- |
+| `HOST`, `PORT`                                           | `127.0.0.1`, `3000`    | Listen address (the Docker image uses `0.0.0.0`)                                 |
+| `DATA_PATH`                                              | `data/recovery.sqlite` | SQLite file                                                                      |
+| `READ_ONLY`                                              | `false`                | Refuse every merchant control                                                    |
+| `ADMIN_TOKEN`                                            | unset                  | Shared Bearer token; required in production for data routes and controls         |
+| `WEBHOOK_ENABLED`, `RAZORPAY_WEBHOOK_SECRET`             | `false`, unset         | Enable `POST /webhooks/razorpay`; the secret is required when enabled            |
+| `WEBHOOK_ASSUME_CONSENT`, `WEBHOOK_ASSUME_CONTACT_ROUTE` | `false`                | Test mode only: let customer-contact decisions appear (delivery stays simulated) |
 
-`npm run capture:webhooks` captures genuine signed **test-mode** webhooks into `fixtures/captured/` (redacted, re-signed with a fixture-only key), and `npm run captured:report` lists which event types exist and replays them through verification, dedup and projection. Captured so far: **none** (the owner runs the capture; see [docs/RAZORPAY_TEST_MODE.md](docs/RAZORPAY_TEST_MODE.md)). Hand-written fixtures live separately in `fixtures/synthetic/`.
+### Commands
 
-## Constrained advisor and experience
+`npm start` (production mode), `npm run dev` (seeded development), `npm run demo` (full release check, then seeded demo), `npm run demo:reset` / `demo:seed`, `npm run capture:webhooks`, `npm run release:check` (verify + secret and artifact audit).
 
-`src/advisor.ts` defines the provider-neutral bounded contract. An injected adapter receives only lifecycle state, normalized failure labels, policy version, and the deterministic eligible set. Strict validation rejects missing/extra fields, actions outside that set, oversized rationale, malformed confidence, and unsafe additions. Unavailable or invalid adapters fall back to fixed rules; low confidence or abstention uses `WAIT` when eligible.
+### HTTP routes
 
-No live model adapter is configured. Delivery and recovery destinations remain simulated. `GET /cases/{id}` exposes decisions, audit, outbox, and outcomes. Demo controls still use `X-Merchant-Role`; these headers are not authentication. Access rules: `READ_ONLY=true` refuses every control (for a public demo). In `production` mode, `/cases`, `/webhook-receipts` and all controls require `ADMIN_TOKEN` as `Authorization: Bearer <token>`, and controls are refused if no token is configured. The token is one shared secret, not per-user authentication, and the dashboard does not send it yet, so in production mode the dashboard cannot load case data.
+`GET /health`, `GET /cases`, `GET /cases/{id}`, `GET /evaluation`, `GET /webhook-receipts`, `POST /webhooks/razorpay`, `POST /cases/{id}/suppress`, `POST /cases/{id}/override`, `POST /outbox/{id}/deliver`. Errors are `{ error, code, message }` with stable codes; internal details are never returned.
 
-## Evaluation and checks
+### Code layout
 
-`npm run evaluate` writes `reports/evaluation-v1.json` and compares no-added-contact, fixed-rule, and bounded-advisor simulation across the same 14 fixtures. Synthetic recovery is a declared fixture label, not observed revenue, incremental lift, or causal evidence.
+- `src/webhook.ts` signature verification, redaction, Razorpay event mapping
+- `src/pipeline.ts` dedup, projection, decision, outbox, outcome (one transaction)
+- `src/policy.ts` eligibility rules; `src/advisor.ts` bounded advisor contract and validation
+- `src/store.ts` SQLite repository; `src/http-app.ts` routes and access checks
+- `src/config.ts`, `src/runtime.ts`, `src/server.ts` configuration, startup, graceful shutdown
+- `fixtures/synthetic/` hand-written data; `fixtures/captured/` real test-mode captures (empty so far)
 
-Individual gates are `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run scenarios`, and `npm run evaluate`. Phase 7 installs Prettier, ESLint, TypeScript, and Node typings; `npm run typecheck` performs strict semantic analysis with `tsc --noEmit`.
-
-## Safety boundary
-
-Deterministic code still owns verification, ingestion, deduplication, monotonic projection, normalization, eligibility, cooldowns, caps, quiet hours, suppression, dispatch authorization, idempotency, and audit. Unknown, contradictory, invalid, or identity-inconsistent inputs fail closed. Fixtures contain synthetic references only. Never add PAN, CVV, PIN, credentials, secrets, real contact details, or live payment URLs.
-
-See `docs/ARCHITECTURE.md`, `docs/DEMO_RUNBOOK.md`, `docs/LIMITATIONS.md`, and `docs/SUBMISSION_CHECKLIST.md`.
+Never commit `.env`, keys, webhook secrets, real contact details or live payment data.
