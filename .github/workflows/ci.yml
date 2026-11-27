@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # package.json engines: >=24
+          cache: npm
+      - run: npm ci
+      - run: npm run verify
+      # The evaluation report is version controlled; fail if verify changed it.
+      - run: git diff --exit-code reports/
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t revenue-recovery .
+      - name: Smoke test production mode (empty, data routes need a token)
+        run: |
+          docker run -d --name prod -p 3000:3000 -v recovery-data:/data revenue-recovery
+          for i in $(seq 1 30); do curl -fs localhost:3000/health >/dev/null && break; sleep 1; done
+          curl -fs localhost:3000/health
+          test "$(curl -s -o /dev/null -w '%{http_code}' localhost:3000/cases)" = 401
+          docker rm -f prod
+      - name: Smoke test seeded demo mode (synthetic fixtures)
+        run: |
+          docker run -d --name demo -p 3001:3000 -v recovery-demo:/data revenue-recovery tools/demo-server.ts demo
+          for i in $(seq 1 30); do curl -fs localhost:3001/health >/dev/null && break; sleep 1; done
+          test "$(curl -s localhost:3001/cases | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).length))')" -gt 0
+          docker rm -f demo

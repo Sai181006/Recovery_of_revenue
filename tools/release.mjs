@@ -12,13 +12,13 @@ const required = [
 // .env is git-ignored and expected to hold real local secrets, so it is not scanned.
 const ignored = new Set(['.git', '.npm-cache', 'node_modules', 'data', '.env']);
 const files = walk('.').filter(
-  (path) => !path.startsWith('reports\\') || path.endsWith('evaluation-v1.json'),
+  (path) => !path.startsWith('reports/') || path.endsWith('evaluation-v1.json'),
 );
 function walk(path) {
   return readdirSync(path).flatMap((name) => {
     if (ignored.has(name)) return [];
     const item = join(path, name);
-    return statSync(item).isDirectory() ? walk(item) : [item.replace(/^\.\\/, '')];
+    return statSync(item).isDirectory() ? walk(item) : [item.replaceAll('\\', '/')]; // same paths on Windows and Linux
   });
 }
 const failures = [];

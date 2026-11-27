@@ -13,5 +13,5 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*.ts", "fixtures/**/*.ts", "test/**/*.ts"]
+  "include": ["src/**/*.ts", "fixtures/**/*.ts", "test/**/*.ts", "tools/**/*.ts"]
 }

@@ -1,6 +1,26 @@
 # Revenue Recovery — Phase 7 application boundaries
 
+[![CI](https://github.com/Sai181006/Recovery_of_revenue/actions/workflows/ci.yml/badge.svg)](https://github.com/Sai181006/Recovery_of_revenue/actions/workflows/ci.yml)
+
 Phase 0–7 credential-independent implementation for failed recurring Razorpay subscriptions. Phase 7 separates the deterministic application core, HTTP construction, SQLite, demo fixtures, configuration, and process lifecycle through explicit ports/adapters. The project still has no live Razorpay calls, live model, real messaging, production authentication, trusted real payment link, deployment, or production hosting.
+
+## Run with Docker
+
+No local Node install needed. From a clean clone:
+
+```sh
+docker build -t revenue-recovery .
+
+# Production mode: starts empty, never seeds synthetic data; SQLite persists in the named volume.
+# Case data and controls need ADMIN_TOKEN (see below), so /cases returns 401 without it.
+docker run --rm -p 3000:3000 -v recovery-data:/data revenue-recovery
+
+# Seeded demo mode: resets and seeds the 14 synthetic fixture scenarios on every start.
+# Use a separate volume so the demo never touches production data.
+docker run --rm -p 3000:3000 -v recovery-demo:/data revenue-recovery tools/demo-server.ts demo
+```
+
+Then open http://localhost:3000. Pass settings with `-e`, e.g. `-e ADMIN_TOKEN=...` or `-e READ_ONLY=true`; never bake secrets into the image. CI builds the image and smoke-tests both commands on every push.
 
 ## Requirements and setup
 
