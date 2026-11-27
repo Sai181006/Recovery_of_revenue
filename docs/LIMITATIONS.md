@@ -1,19 +1,50 @@
-# Limitations after Phase 7
+# Limitations
 
-The repository proves credential-independent deterministic behavior and a production-style boot boundary, not production readiness, live integration, hosting, or incremental revenue.
+This is a portfolio project. It demonstrates safe webhook processing and decision logic for
+failed subscription payments. It is not deployed in production, has no users, and has
+processed no real money.
 
-Still required before an integrated submission claim:
+## What is real
 
-- Verify the current official Buildathon brief, deadline, judging criteria, and required assets.
-- Connect a Razorpay test account through locally supplied secrets and a public HTTPS endpoint.
-- Capture and commit only redacted genuine test-mode pending, charged/recovered, and halted payloads.
-- Validate mapper fields, retry behavior, reconciliation calls, and a trusted account-specific recovery flow.
-- Select and evaluate a live model/provider; keep deterministic fallback and never broaden eligibility.
-- Decide whether simulated messaging is acceptable; otherwise approve consent, provider, and deliverability setup.
-- Replace demo role headers with real authentication/authorization for any hosted environment.
-- Replace local single-process SQLite with a production-capable transactional design only in Phase 8 after repository contracts are reviewed.
-- Review privacy, PCI/RBI applicability, retention, tenant isolation, incident handling, and deployment security.
+- **Code paths:** HMAC-SHA256 signature verification over raw bytes, receipt storage,
+  deduplication by `X-Razorpay-Event-Id`, atomic SQLite processing, the monotonic state
+  projection with failure episodes, the deterministic policy, and the HTTP API all run for real
+  (`npm test` makes real HTTP requests against the server).
+- **Razorpay test-mode events:** tooling to capture real, signed test-mode webhooks
+  (`npm run capture:webhooks`), redact them, and replay them through verification, dedup and
+  projection (`npm run captured:report`, `npm test`). **Captured so far: none.** The owner has
+  not run a capture yet, so `fixtures/captured/` is empty and those two tests are skipped.
+  Re-run `npm run captured:report` to see the current list.
 
-Node's built-in SQLite currently emits an experimental warning. Synthetic fixtures and outcomes cannot establish causal lift. The approved-domain validator does not prove that a URL belongs to the correct customer/case; that requires account-specific trusted-flow evidence.
+## What is synthetic
 
-Phase 7 configuration validates modes and conditional fields but is not a secret manager. `.env` remains local-only, production authentication is absent (only a shared `ADMIN_TOKEN` and a `READ_ONLY` switch exist), demo role headers are trusted input once past those checks, telemetry is only an injected no-op/test boundary, and graceful shutdown is single-process. There is one repository adapter (SQLite); tests use it with an in-memory database. No external queue, concurrency control, migration system, reconciliation worker, retry/dead-letter mechanism, backup/restore, retention workflow, rate limiting, or deployment artifact has been added.
+- The 14 scenarios, the Razorpay-shaped payloads in `fixtures/synthetic/`, the tests that use
+  them, the evaluation report and the demo dashboard data were all written by hand for this
+  project.
+- "Synthetic recoveries" in the evaluation are a declared fixture label, not observed revenue,
+  incremental lift or causal evidence.
+
+## What is simulated or missing
+
+- **Customer messaging:** messages go to a simulated outbox; nothing is sent.
+- **Payment links / recovery flow:** simulated. The URL allowlist check does not prove a link
+  belongs to the right customer.
+- **Authentication:** none. Dashboard roles come from an `X-Merchant-Role` header. The only
+  protections are `READ_ONLY=true` and a single shared `ADMIN_TOKEN` (required in production
+  mode). The dashboard does not send the token, so in production mode it cannot load data.
+- **Customer consent:** not modelled per customer. Live webhooks use one merchant-level
+  setting that defaults to "no consent", so customer contact is never eligible unless the
+  operator sets `WEBHOOK_ASSUME_CONSENT=true` (intended for test mode only).
+- **Live model:** no LLM is wired in. The advisor port is exercised by deterministic
+  simulations; every decision comes from fixed rules.
+- **Event coverage:** `subscription.pending/halted/charged/cancelled/paused/resumed` are mapped.
+  `payment.failed` and `subscription.activated` are acknowledged and logged as unsupported.
+  Whether real `subscription.pending` payloads carry the failure reason is unverified until a
+  capture exists.
+- **Scheduling:** a decision to wait (quiet hours, cooldown) is never revisited later; there is
+  no scheduler or retry worker.
+- **Operations:** single process, local SQLite (Node's built-in SQLite still prints an
+  experimental warning), no migrations, backups, retention policy, rate limiting or
+  multi-tenant isolation. `.env` is not a secret manager. The hosted demo (if deployed) is
+  read-only synthetic data on a free tier that sleeps when idle.
+- **Compliance:** no privacy, PCI or RBI review has been done.

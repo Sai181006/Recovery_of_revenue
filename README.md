@@ -55,6 +55,10 @@ Set `WEBHOOK_ENABLED=true` and `RAZORPAY_WEBHOOK_SECRET` locally, start the serv
 
 The default server context has no customer consent or approved contact route, so customer contact fails closed; merchant escalation (e.g. for a halted subscription) does not need customer consent. For Razorpay test mode only, `WEBHOOK_ASSUME_CONSENT=true` and `WEBHOOK_ASSUME_CONTACT_ROUTE=true` let contact decisions appear (delivery stays simulated). This repository contains no Razorpay credentials, API calls, or genuine captured account lifecycle. Never commit `.env` or a webhook secret.
 
+## Real Razorpay test-mode events
+
+`npm run capture:webhooks` captures genuine signed **test-mode** webhooks into `fixtures/captured/` (redacted, re-signed with a fixture-only key), and `npm run captured:report` lists which event types exist and replays them through verification, dedup and projection. Captured so far: **none** (the owner runs the capture; see [docs/RAZORPAY_TEST_MODE.md](docs/RAZORPAY_TEST_MODE.md)). Hand-written fixtures live separately in `fixtures/synthetic/`.
+
 ## Constrained advisor and experience
 
 `src/advisor.ts` defines the provider-neutral bounded contract. An injected adapter receives only lifecycle state, normalized failure labels, policy version, and the deterministic eligible set. Strict validation rejects missing/extra fields, actions outside that set, oversized rationale, malformed confidence, and unsafe additions. Unavailable or invalid adapters fall back to fixed rules; low confidence or abstention uses `WAIT` when eligible.
