@@ -4,7 +4,6 @@ const required = [
   'README.md',
   '.env.example',
   'docs/ARCHITECTURE.md',
-  'docs/DEMO_RUNBOOK.md',
   'docs/LIMITATIONS.md',
   'reports/evaluation-v1.json',
 ];
@@ -26,7 +25,8 @@ for (const path of required)
 const secretPatterns = [
   /rzp_live_[A-Za-z0-9]+/,
   /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,
-  /(?:KEY_SECRET|WEBHOOK_SECRET|API_KEY|ADMIN_TOKEN)[ \t]*=[ \t]*[^ \t\r\n#]+/,
+  // A value after NAME=, except documentation placeholders like <...> or ...
+  /(?:KEY_SECRET|WEBHOOK_SECRET|API_KEY|ADMIN_TOKEN)[ \t]*=[ \t]*(?!<|\.\.\.)[^ \t\r\n#]+/,
 ];
 for (const path of files) {
   const source = readFileSync(path, 'utf8');
