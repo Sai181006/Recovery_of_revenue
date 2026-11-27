@@ -14,7 +14,7 @@ import type { RecoveryEvent } from '../src/types.ts';
 
 const temporaryRoots: string[] = [];
 const temporaryRoot = () => {
-  const path = mkdtempSync(join(tmpdir(), 'revenue-recovery-phase7-'));
+  const path = mkdtempSync(join(tmpdir(), 'revenue-recovery-runtime-'));
   temporaryRoots.push(path);
   return path;
 };

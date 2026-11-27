@@ -1,7 +1,7 @@
 {
   "reportVersion": "evaluation-v1",
   "generatedAt": "2026-08-23T23:59:59.000Z",
-  "dataset": "synthetic_phase_0_fixtures",
+  "dataset": "synthetic_fixtures_v1",
   "fixtureSetHash": "0ef7b17631f67f20309db27637b604dd951f7782492bfc247274f471777e1b88",
   "outcomeRule": "Synthetic recovery is true only for the three customer-remediable golden fixtures when the selected customer-contact action is an acceptable label. This is not observed revenue or causal lift.",
   "releaseGate": {

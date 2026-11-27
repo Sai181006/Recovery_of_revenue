@@ -1,6 +1,6 @@
-# Phase 0/1 decision additions
+# Decision log
 
-This additive log inherits D-001–D-014, A-001–A-004, and P-001–P-002 from the source-of-truth `outputs/04_DECISIONS.md`. The source file remains unchanged.
+Decisions recorded while building the project. "Phase N" refers to the order in which parts were built (webhooks, advisor, dashboard, and so on), not to a release plan. Later decisions can supersede earlier ones; the code and `docs/LIMITATIONS.md` describe the current state.
 
 | ID    | Type            | Status   | Decision or assumption                                                                                                                                                                 | Rationale                                                                                                                                                                     | Consequence / validation                                                                                  | Date       |
 | ----- | --------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ---------- |

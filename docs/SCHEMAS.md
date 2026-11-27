@@ -1,19 +1,19 @@
-# Phase 0 schema contract
+# Schema contract
 
 The versioned TypeScript contract in `src/types.ts` is the executable schema. All records use schema version `1.0`; fixtures compile against it.
 
 - **RecoveryEvent:** immutable source identity and times, merchant/subscription/customer references, lifecycle event, amount/currency, consent/contact/suppression controls, optional retry/update-flow signals, and the untouched raw failure object.
 - **MerchantPolicy:** immutable decision snapshot identity, IANA timezone, quiet-hour window, cooldown, per-case contact cap, minimum amount, enabled simulated channels, and trusted-update-link permission.
-- **RecoveryCase:** current monotonic subscription projection, case state, point-in-time amount, normalized failure plus raw source fields, contact counters, and latest accepted event.
+- **RecoveryCase:** current monotonic subscription projection, case state, point-in-time amount, normalized failure plus raw source fields, contact counters, latest accepted event, and an `episode` counter that increments when a new failure reopens a recovered case.
 - **Decision:** exact eligible and prohibited allowlist partitions, selected action, deterministic reason codes, policy version, and selector version.
-- **AuditEvent:** append-only event/case/time/kind/detail record for receipt, deduplication, projection, decisions, outbox, and outcomes.
+- **AuditEvent:** insert-only (not tamper-proof) event/case/time/kind/detail record for receipt, deduplication, projection, decisions, outbox, and outcomes.
 - **Outcome:** event-linked open/recovered/cancelled/suppressed status, optional recovered value, and conservative attribution.
-- **WebhookReceipt:** append-only receipt ID, Razorpay event ID, receipt time, verification status, processing status, recursively redacted payload, and optional failure reason. It is persisted before event mapping.
+- **WebhookReceipt:** append-only receipt ID, Razorpay event ID, receipt time, verification status, processing status, recursively redacted payload, and optional failure reason. Verified payloads are redacted and persisted before event mapping; unsigned deliveries keep only their size and a hash.
 
 The action enum is exactly `WAIT`, `SEND_GENTLE_REMINDER`, `SEND_ACTION_REQUIRED`, `SURFACE_PAYMENT_UPDATE_LINK`, `ESCALATE_TO_MERCHANT`, and `SUPPRESS`. Optional fields are omitted rather than populated with guessed values.
 
 The advisor input contains only `schemaVersion`, case/subscription state, normalized failure labels, eligible actions, and policy version. Advisor output contains exactly `schemaVersion`, `selectedAction`, `reasonCodes`, `rationale`, `confidence`, and `abstain`. Decisions additionally record selection source, hashes, adapter/config versions, and validation failures.
 
-Phase 4 adds a versioned message preview (`templateVersion`, simulated channel, subject, body, recovery destination) and audited merchant-control records. Recovery destinations are either an explicit simulation marker or a validated HTTPS URL on an approved domain. Outbox delivery status is simulated and idempotent.
+There is also a versioned message preview (`templateVersion`, simulated channel, subject, body, recovery destination) and audited merchant-control records. Recovery destinations are either an explicit simulation marker or a validated HTTPS URL on an approved domain. Outbox delivery status is simulated and idempotent.
 
-The Phase 5 report contains a report version, deterministic generation time, dataset label/hash, explicit outcome rule, release-gate result/failures, per-strategy metrics, segmented metrics, and complete scenario traces. Every trace links eligibility, selection, prohibited actions, outbox/audit/outcome counts, synthetic label, and violations.
+The evaluation report contains a report version, deterministic generation time, dataset label/hash, explicit outcome rule, release-gate result/failures, per-strategy metrics, segmented metrics, and complete scenario traces. Every trace links eligibility, selection, prohibited actions, outbox/audit/outcome counts, synthetic label, and violations.

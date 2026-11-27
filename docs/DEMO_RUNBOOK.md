@@ -3,7 +3,7 @@
 ## Primary fixture demo (about 4 minutes)
 
 1. Run `npm install`, then `npm run demo`. The command runs every release gate, resets/seeds fixtures, and starts explicit demo mode.
-2. Open `http://localhost:3000` and identify the credential-independent demo badge and active safety controls.
+2. Open `http://localhost:3000` and point out the "Synthetic data" badge and active safety controls.
 3. Use **Recovery cases** to choose insufficient-funds, expired-card, halted, and ambiguous examples.
 4. Open a case and show exact evidence, normalized failure, eligible/prohibited actions, selection source, message preview, outbox, outcome, and audit.
 5. Demonstrate the simulated delivery or suppress control and show its appended audit event.

@@ -6,7 +6,6 @@ const required = [
   'docs/ARCHITECTURE.md',
   'docs/DEMO_RUNBOOK.md',
   'docs/LIMITATIONS.md',
-  'docs/SUBMISSION_CHECKLIST.md',
   'reports/evaluation-v1.json',
 ];
 // .env is git-ignored and expected to hold real local secrets, so it is not scanned.

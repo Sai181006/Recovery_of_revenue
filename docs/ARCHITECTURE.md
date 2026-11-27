@@ -1,6 +1,6 @@
 # Architecture and safety boundaries
 
-## Phase 7 runtime shape
+## Runtime shape
 
 ```text
 process entrypoint (production or demo)
@@ -42,6 +42,6 @@ Razorpay remains the payment system of record. Deterministic code owns signature
 
 Runtime modes are exactly `demo`, `development`, and `production`. Host, port, SQLite data path, and public directory are environment controlled with loopback/local safe defaults. Webhook handling is disabled unless `WEBHOOK_ENABLED=true`; that condition requires a webhook secret. Validation fails before resource creation/listening and reports field-level issues without values.
 
-Application failures use stable `AppError` codes. One HTTP mapper owns status and safe response text, so internal exception messages are never serialized. Existing successful JSON route shapes and the UI are unchanged; error bodies intentionally change to `{ error, code, message }` with machine-readable codes.
+Application failures use stable `AppError` codes. One HTTP mapper owns status and safe response text, so internal exception messages are never serialized. Error bodies are `{ error, code, message }` with machine-readable codes.
 
-SQLite remains local and single-process; Phase 7 does not add PostgreSQL, queues, workers, authentication, real providers, or deployment. Phase 8 may evolve persistence behind the repository contract, but no Phase 8 implementation exists here.
+SQLite is local and single-process. Every event is processed in one SQLite transaction (`RecoveryRepository.transaction`), so a failure leaves nothing behind and a redelivery reprocesses cleanly. There is deliberately no PostgreSQL, queue, worker or real messaging provider; see `docs/LIMITATIONS.md`.

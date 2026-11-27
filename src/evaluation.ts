@@ -185,7 +185,7 @@ export function evaluate() {
   return {
     reportVersion: 'evaluation-v1',
     generatedAt: '2026-08-23T23:59:59.000Z',
-    dataset: 'synthetic_phase_0_fixtures',
+    dataset: 'synthetic_fixtures_v1',
     fixtureSetHash,
     outcomeRule:
       'Synthetic recovery is true only for the three customer-remediable golden fixtures when the selected customer-contact action is an acceptable label. This is not observed revenue or causal lift.',

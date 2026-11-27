@@ -24,7 +24,6 @@ export function readiness(config: ReadinessConfig) {
   blockers.push('genuine Razorpay test lifecycle not yet captured');
   return {
     status: 'ok',
-    phase: 'phase-6-credential-independent',
     fixtureDemoReady: true,
     integratedDemoReady: false,
     mode: config.mode ?? 'unknown',
